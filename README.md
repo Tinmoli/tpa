@@ -1,6 +1,6 @@
-# tpa <img alt="tpa Logo" src="https://raw.githubusercontent.com/Tinmoli\Tpa\common\src\main\resources\tpa.png" width="30"/>
+# tpa <img alt="tpa Logo" src="common\src\main\resources\tpa.png" width="30"/>
 
-一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back、/wild 等
+一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back 等
 
 项目地址：[https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 
