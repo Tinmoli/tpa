@@ -1,4 +1,4 @@
-# 传送MOD<img alt="tpa Logo" src="common\src\main\resources\tpa.png" width="30"/>
+# 传送MOD<img alt="tpa Logo" src="https://github.com/Tinmoli/tpa/blob/main/common/src/main/resources/tpa.png" width="30"/>
 
 一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back 等
 
