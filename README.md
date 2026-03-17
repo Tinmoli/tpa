@@ -70,5 +70,5 @@
 
 ## 鸣谢
 
-- [TeleportCommands](https://github.com/MrSn0wy/TeleportCommands) — 本项目的灵感来源与参考实现
+- [TeleportCommands](https://github.com/MrSn0wy/TeleportCommands) — 借鉴于该项目的部分代码
 - [Dalict](https://github.com/Dalict) — 感谢贡献与支持
