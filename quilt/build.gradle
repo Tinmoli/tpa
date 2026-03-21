@@ -1,0 +1,63 @@
+plugins {
+    id 'multiloader-loader'
+    id 'fabric-loom'
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://maven.nucleoid.xyz" }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${parchment_minecraft}:${parchment_version}@zip")
+    }
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    include(implementation('org.yaml:snakeyaml:2.2'))
+    include(modImplementation("eu.pb4:sgui:${sgui_version}"))
+}
+
+loom {
+    def aw = project(":common").file("src/main/resources/${mod_id}.accesswidener")
+    if (aw.exists()) {
+        accessWidenerPath.set(aw)
+    }
+    mixin {
+        useLegacyMixinAp = true
+        defaultRefmapName.set("${mod_id}.refmap.json")
+    }
+    runs {
+        server {
+            server()
+            setConfigName("Quilt Server")
+            ideConfigGenerated(true)
+            runDir("runs/server")
+        }
+    }
+}
+
+tasks.named("remapJar") {
+    archiveFileName.set("${mod_id}-${project.name}-${minecraft_version}-v${version}.jar")
+}
+
+processResources {
+    def expandProps = [
+        "version"                  : version,
+        "group"                    : project.group,
+        "minecraft_version"        : minecraft_version,
+        "minecraft_version_range"  : minecraft_version_range,
+        "fabric_loader_version"    : fabric_loader_version,
+        "mod_name"                 : mod_name,
+        "mod_author"               : mod_author,
+        "mod_id"                   : mod_id,
+        "license"                  : license,
+        "description"              : project.description,
+        "java_version"             : java_version
+    ]
+    filesMatching(['quilt.mod.json', 'fabric.mod.json', '*.mixins.json']) {
+        expand expandProps
+    }
+    inputs.properties(expandProps)
+}

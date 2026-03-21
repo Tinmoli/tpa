@@ -1,0 +1,34 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.neoforged.moddev' version "${neoforge_moddevgradle}"
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://maven.nucleoid.xyz" }
+    maven { url "https://maven.neoforged.net/releases" }
+}
+
+neoForge {
+    version = "${neoforge_version}"
+    parchment {
+        mappingsVersion = "${parchment_version}"
+        minecraftVersion = "${parchment_minecraft}"
+    }
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+dependencies {
+    implementation 'org.yaml:snakeyaml:2.2'
+    jarJar('org.yaml:snakeyaml:[2.2,3.0)')
+    implementation "eu.pb4:sgui:${sgui_version}"
+    jarJar("eu.pb4:sgui:[${sgui_version},)")
+}
+
+tasks.named('jar') {
+    archiveFileName.set("${mod_id}-${project.name}-${minecraft_version}-v${version}.jar")
+}
