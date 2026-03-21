@@ -1,9 +1,17 @@
 # tpa <img alt="tpa Logo" src="https://github.com/Tinmoli/tpa/blob/main/common/src/main/resources/tpa.png" width="30"/>
-一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back、/wild 等
+一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back、/rtp 等
 
 项目地址：[https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 
 这里是[更新日志](https://github.com/Tinmoli/tpa/blob/main/CHANGELOG.md)
+
+## 支持的平台
+
+| 平台 | 状态 |
+|------|------|
+| Fabric | ✅ 支持 |
+| Quilt | ✅ 支持 |
+| NeoForge | 🚧 开发中（等待正式版发布） |
 
 ## 目前可用的指令
 
@@ -25,17 +33,58 @@
 - `/tpahere <玩家>` - 请求将玩家传送到你这里
 - `/tpaaccept <玩家>` - 接受传送请求
 - `/tpadeny <玩家>` - 拒绝传送请求
+- `/rtp [<维度>]` - 随机传送到世界各处，可指定维度
 
 <br>
 
 ## 配置文件
 
-配置文件位于 `config/tpa/config.yml`，支持以下配置：
+配置文件位于 `config/tpa/config.yml`，每项配置均附有中文注释，支持以下配置：
 
-- **language**：界面语言（默认 `zh_cn`，支持 `en_us`）
-- **back / home / tpa / warp / spawn**：各指令的启用状态等选项
-- **tpa.delay**：接受传送请求后的等待秒数（默认 3 秒，设为 0 立即传送）
-- **tpa.cancelOnMove**：等待期间移动则取消传送（默认开启）
+```yaml
+# TPA 插件配置文件
+# 修改后需重启服务器生效
+
+# 语言设置，可选值: zh_cn, en_us
+language: zh_cn
+# /back 命令配置
+back:
+  # 是否启用该命令
+  enabled: true
+  # 传送后是否删除死亡位置记录
+  deleteAfterTeleport: false
+# /home 命令配置
+home:
+  enabled: true
+  # 每位玩家最多可以设置的家的数量
+  playerMaximum: 20
+  # 是否自动删除无效的位置（世界不存在时）
+  deleteInvalid: false
+  # 传送等待时间（秒），0 表示立即传送
+  delay: 0
+# /tpa 命令配置
+tpa:
+  enabled: true
+  delay: 3
+  # 传送等待期间移动是否取消传送
+  cancelOnMove: true
+# /warp 命令配置
+warp:
+  enabled: true
+  deleteInvalid: false
+# /spawn 命令配置
+spawn:
+  enabled: true
+  # 出生点所在世界的 ID，默认为主世界
+  world_id: minecraft:overworld
+# /rtp 命令配置
+rtp:
+  enabled: true
+  # 随机传送最小范围（方块）
+  minRange: 1000
+  # 随机传送最大范围（方块）
+  maxRange: 2000
+```
 
 ## 语言文件
 
@@ -61,7 +110,6 @@
 # Windows
 .\gradlew.bat build
 ```
-
 
 如有问题欢迎提交 [Issue](https://github.com/Tinmoli/tpa/issues)
 
