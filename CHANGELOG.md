@@ -10,7 +10,7 @@
 - 配置项 `rtp.enabled`：启用/禁用随机传送功能
 - 配置项 `rtp.minRange` 和 `rtp.maxRange`：设置随机传送范围（方块）
 - 配置文件自动升级：新版本启动时自动检测并补全缺失的配置项，保留用户自定义注释
-- 添加NeoForge / Quilt支持
+- 添加Quilt支持
 
 ### 修复
 - 修复 `/tpaaccept` 和 `/tpadeny` 命令权限检查导致需要确认执行的问题
