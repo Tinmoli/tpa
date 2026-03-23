@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "quilt_loader": {
+    "group": "${group}",
+    "id": "${mod_id}",
+    "version": "${version}",
+    "metadata": {
+      "name": "${mod_name}",
+      "description": "${description}",
+      "contributors": {
+        "${mod_author}": "Owner"
+      },
+      "contact": {
+        "homepage": "https://github.com/Tinmoli/tpa",
+        "issues": "https://github.com/Tinmoli/tpa/issues"
+      },
+      "license": "${license}",
+      "icon": "${mod_id}.png"
+    },
+    "intermediate_mappings": "net.fabricmc:intermediary",
+    "entrypoints": {
+      "init": [
+        "tpa.QuiltInit"
+      ]
+    },
+    "depends": [
+      {
+        "id": "quilt_loader",
+        "versions": "*"
+      },
+      {
+        "id": "minecraft",
+        "versions": "${minecraft_version_range}"
+      },
+      {
+        "id": "java",
+        "versions": ">=${java_version}"
+      }
+    ]
+  },
+  "mixin": "${mod_id}.mixins.json"
+}

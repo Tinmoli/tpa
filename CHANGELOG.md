@@ -3,6 +3,31 @@
 
 ---
 
+## [1.0.2] - 2026-03-23
+
+### 新增
+- 配置项 `tpa.requestExpireReminder`：TPA 请求过期前的提醒时间（秒），设为 `0` 可禁用提醒（原固定 30 秒）
+- `/spawn` 命令现在读取配置中的 `spawn.world_id`，支持自定义出生点所在维度（此前硬编码为主世界）
+
+### 修复
+- 修复 `StorageManager.cleanup()` 在 for-each 循环中直接删除元素导致的 `ConcurrentModificationException`
+- 修复 `StorageLoader` 和 `StorageMigrator` 中 `FileReader` 未关闭导致的资源泄漏
+- 修复 `StorageLoader` 在存储文件不存在时初始化后未提前返回，导致继续执行迁移逻辑的问题
+- 修复 `tpa.java` 中 `exportBuiltinLangFiles()` 重复调用 `listFiles()` 存在的竞态隐患
+- 修复 TPA 请求接受/拒绝后，过期提醒 Timer 仍会触发并发送无效消息的问题
+- 修复 TPA 接受/拒绝按钮的点击命令未对玩家名加引号，导致名字含空格时命令解析失败的问题
+- 修复 `DeathLocationStorage` 使用非线程安全 `HashMap`，改为 `ConcurrentHashMap`
+- 修复 `/rtp` 命令仅尝试一次随机位置，在海洋、空岛等地形下几乎必然失败的问题，改为最多重试 10 次
+- 删除 `warp.java` 中遗留的调试用 `System.out.println` 输出
+
+### 改进
+- `tools.getTranslatedText()` 添加语言文件内存缓存，避免每次发送消息都读取磁盘，提升性能
+- `TeleportDelayManager` 和 `tools` 中的 `Random` 改为 `ThreadLocalRandom`，消除多线程竞争
+- 移除未使用的 `ModCommand` 枚举
+- 移除已被 GUI 替代的 `PrintHomes()` 和 `PrintWarps()` 死代码方法
+
+---
+
 ## [1.0.1] - 2026-03-21
 
 ### 新增
@@ -12,7 +37,7 @@
 - 配置文件自动升级：新版本启动时自动检测并补全缺失的配置项
 - 配置文件每项配置自动写入中文注释，方便直接阅读和编辑
 - 添加 Quilt 支持（基于 Fabric 兼容层构建）
-- 创建 NeoForge 子项目（等待 NeoForge 1.21.11 正式版发布后启用）
+- 创建 NeoForge 子项目
 
 ### 修复
 - 修复 `/tpaaccept` 和 `/tpadeny` 命令权限检查导致需要确认执行的问题
