@@ -1,4 +1,4 @@
-# tpa <img alt="tpa Logo" src="https://github.com/Tinmoli/tpa/blob/main/common/src/main/resources/tpa.png" width="30"/>
+# tpa <img alt="tpa Logo" src="https://github.com/Tinmoli/Tpa/fabric/src/main/resources/tpa.png" width="30"/>
 一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back、/rtp 等
 
 项目地址：[https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
@@ -7,11 +7,17 @@
 
 ## 支持的平台
 
-| 平台 | 状态 |
-|------|------|
-| Fabric | 支持 |
-| Quilt | 支持 |
-| NeoForge | 开发中 |
+| 平台 | 支持版本 |
+|------|----------|
+| Fabric | 1.26.1 |
+
+> **注意**：从 v1.0.3 起，项目已转为纯 Fabric 模组，不再支持 NeoForge 和 Quilt。
+
+## 依赖
+
+- Fabric Loader >= 0.16.10
+- Minecraft 1.26.1
+- Java 25
 
 ## 目前可用的指令
 

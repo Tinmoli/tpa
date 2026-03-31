@@ -3,6 +3,32 @@
 
 ---
 
+## [1.0.3] - 2026-03-31
+
+### 重大变更
+- **升级至 Minecraft 26.1** - 全面支持 Fabric 26.1（Java 25）
+- **移除多平台支持** - 删除 NeoForge 和 Quilt 加载器支持，转为纯 Fabric 项目
+
+> **注意**：从 v1.0.3 起，项目已转为纯 Fabric 模组，不再支持 NeoForge 和 Quilt。
+
+### 技术更新
+- **构建链升级**：
+  - Fabric Loom 升级至 1.15-SNAPSHOT
+  - Java 版本升级至 25
+  - 移除 Mappings 依赖（使用 Mojang 官方命名）
+  
+- **API 适配**：
+  - 修复 `ServerPlayer.displayClientMessage()` 移除导致的编译错误
+  - 新增 `tools.sendPlayerMessage()` 统一消息发送方法（Action Bar 使用 `ClientboundSetActionBarTextPacket`，聊天使用 `sendSystemMessage`）
+  - 适配 sgui 2.0+ 新 API（`setCallback` 签名变更）
+  - 移除 `GuiElementBuilder.setSkullOwner()` 调用（API 已移除）
+
+### 修复
+- 修复 GUI 回调方法歧义错误
+- 修复所有命令类中已弃用的消息发送 API 调用
+
+---
+
 ## [1.0.2] - 2026-03-23
 
 ### 新增

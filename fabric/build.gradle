@@ -1,0 +1,89 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+base {
+    archivesName = "${mod_id}-fabric-${minecraft_version}"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'AliyunMirror'
+        url = 'https://maven.aliyun.com/repository/public'
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Sponge'
+                url = 'https://repo.spongepowered.org/repository/maven-public'
+            }
+        }
+        filter { includeGroupAndSubgroups('org.spongepowered') }
+    }
+    maven { url "https://maven.nucleoid.xyz" }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
+    compileOnly group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
+    annotationProcessor group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
+    // YAML config support - bundled into the JAR via Loom's include
+    include(implementation('org.yaml:snakeyaml:2.2'))
+    // sgui - server-side GUI
+    include(implementation("eu.pb4:sgui:${sgui_version}"))
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 25
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/${mod_id}.accesswidener")
+}
+
+processResources {
+    def expandProps = [
+        "version"                 : version,
+        "group"                   : project.group,
+        "minecraft_version"       : minecraft_version,
+        "minecraft_version_range" : minecraft_version_range,
+        "loader_version"          : loader_version,
+        "loom_version"            : loom_version,
+        "mod_name"                : mod_name,
+        "mod_author"              : mod_author,
+        "mod_id"                  : mod_id,
+        "license"                 : license,
+        "description"             : project.description,
+        "credits"                 : credits,
+        "java_version"            : java_version
+    ]
+
+    var jsonExpandProps = expandProps.collectEntries {
+        key, value -> [(key): value instanceof String ? value.replace("\n", "\\\\n") : value]
+    }
+
+    filesMatching(['pack.mcmeta', 'fabric.mod.json', '*.mixins.json']) {
+        expand jsonExpandProps
+    }
+
+    inputs.properties(expandProps)
+}
+
+jar {
+    archiveFileName.set("${mod_id}-${project.name}-${minecraft_version}-v${version}.jar")
+    exclude "**/*.md"
+
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}-${mod_id}" }
+    }
+}
