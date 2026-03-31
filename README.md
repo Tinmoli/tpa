@@ -9,14 +9,14 @@
 
 | 平台 | 支持版本 |
 |------|----------|
-| Fabric | 1.26.1 |
+| Fabric | 26.1 |
 
 > **注意**：从 v1.0.3 起，项目已转为纯 Fabric 模组，不再支持 NeoForge 和 Quilt。
 
 ## 依赖
 
 - Fabric Loader >= 0.16.10
-- Minecraft 1.26.1
+- Minecraft 26.1
 - Java 25
 
 ## 目前可用的指令
