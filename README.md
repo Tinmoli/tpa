@@ -1,4 +1,4 @@
-# tpa <img alt="tpa Logo" src="https://github.com/Tinmoli/tpa/tree/main/fabric/src/main/resources/tpa.png" width="30"/>
+# tpa <img alt="tpa Logo" src="https://github.com/Tinmoli/tpa/blob/main/fabric/src/main/resources/tpa.png" width="30"/>
 一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back、/rtp 等
 
 项目地址：[https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
