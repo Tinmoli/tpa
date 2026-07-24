@@ -12,6 +12,8 @@ public class NamedLocation {
     private final int y;
     private final int z;
     private final String world;
+    // Optional item registry ID used by HomesGui. Missing/null keeps the default bed icon.
+    private String icon = "";
 
     public NamedLocation(String name, BlockPos pos, String world) {
         this.name = name;
@@ -46,6 +48,15 @@ public class NamedLocation {
     // Return the world id as a string
     public String getWorldString() {
         return this.world;
+    }
+
+    public String getIcon() {
+        return icon == null ? "" : icon;
+    }
+
+    public void setIcon(String icon) throws Exception {
+        this.icon = icon == null ? "" : icon;
+        StorageManager.StorageSaver();
     }
 
     // function to quickly filter the worlds and get the ServerLevel for the string

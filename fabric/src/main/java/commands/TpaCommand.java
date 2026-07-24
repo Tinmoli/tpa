@@ -214,18 +214,20 @@ public class TpaCommand {
             Timer reminderTimer = new Timer(true);
             reminderTimer.schedule(new TimerTask() {
                 @Override public void run() {
-                    // 仅在请求仍存在时才提醒，避免已接受/拒绝后还发消息
-                    CopyOnWriteArrayList<TpaRequest> l = requestMap.get(targetUUID);
-                    if (l != null && l.contains(request)) {
-                        tpa.SERVER.execute(() -> {
-                            sendPlayerMessage(initiator,
-                                    getTranslatedText("commands.teleport_commands.tpa.expired", initiator)
-                                            .withStyle(ChatFormatting.RED, ChatFormatting.BOLD), true);
-                            sendPlayerMessage(target,
-                                    getTranslatedText("commands.teleport_commands.tpa.expired", target)
-                                            .withStyle(ChatFormatting.WHITE), true);
-                        });
-                    }
+                    // 请求状态必须在服务器主线程内再次检查。若只在 Timer
+                    // 线程检查，检查后到消息任务执行前请求可能已被接受或拒绝。
+                    tpa.SERVER.execute(() -> {
+                        CopyOnWriteArrayList<TpaRequest> requests = requestMap.get(targetUUID);
+                        if (requests == null || !requests.contains(request)) {
+                            return;
+                        }
+                        sendPlayerMessage(initiator,
+                                getTranslatedText("commands.teleport_commands.tpa.expired", initiator)
+                                        .withStyle(ChatFormatting.RED, ChatFormatting.BOLD), true);
+                        sendPlayerMessage(target,
+                                getTranslatedText("commands.teleport_commands.tpa.expired", target)
+                                        .withStyle(ChatFormatting.WHITE), true);
+                    });
                     reminderTimer.cancel();
                 }
             }, (long) reminderSecs * 1000);

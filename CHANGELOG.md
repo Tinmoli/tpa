@@ -1,91 +1,124 @@
-# 更新日志
-所有值得记录的项目变更都将记录在此文件中。
+# Changelog
+All notable changes to this project will be documented in this file.
+
+---
+
+## [1.0.4] - 2026-07-24
+
+### Added
+- Added a paginated icon picker for freely choosing Home or Warp icons from all vanilla items
+- The Homes GUI supports middle-clicking a home to make it the default for `/home`
+- Home and Warp GUI action hints are split across two lore lines to avoid overly long text
+- The Homes GUI opens the picker with `Shift + Left-click` and quickly resets the icon with `Shift + Right-click`
+- Home icon data supports both JSON and SQLite and remains compatible with existing homes without an icon field
+- Added custom icons to the Warps GUI; only operators can open the icon picker or reset warp icons
+- Added SQLite as a runtime storage backend, selectable through `storage.backend` with `json` or `sqlite`
+- Added the operator-only `/tpastorage json-to-sqlite` command to convert `storage.json` to `storage.db`
+- Added the operator-only `/tpastorage sqlite-to-json` command to convert `storage.db` to `storage.json`
+- Added the SQLite JDBC dependency and bundled the driver into the mod JAR
+
+### Fixed
+- Fixed external language files missing new translation keys after a mod update, which caused raw keys to appear in chat and GUIs
+- Unified administrator command visibility so regular players no longer see warp management or storage conversion commands in `/tpals`
+- Fixed `/tpals` not showing the JSON and SQLite conversion commands to operators
+- Fixed the `home.playerMaximum` configuration not being enforced
+- Fixed players being able to create additional homes after reaching the configured limit
+- Fixed duplicate home names being incorrectly reported as a limit error when the player was at the limit
+
+### Improved
+- Bundled English and Chinese language files are now synchronized on startup: new keys are added, obsolete keys are removed, and existing custom values are preserved
+- Invalid built-in language files are backed up and restored from bundled content
+- Configuration files are now explicitly written using UTF-8
+- Made SQLite the default backend for new installations and configurations missing storage settings
+- Added validation for `storage.backend`; unsupported values fall back to `sqlite`
+- Negative `home.playerMaximum` values are normalized to `0`
+- Updated the English and Chinese READMEs with SQLite configuration, data file, and conversion instructions
 
 ---
 
 ## [1.0.3] - 2026-03-31
 
-### 重大变更
-- **升级至 Minecraft 26.1** - 全面支持 Fabric 26.1（Java 25）
-- **移除多平台支持** - 删除 NeoForge 和 Quilt 加载器支持，转为纯 Fabric 项目
+### Major Changes
+- **Upgraded to Minecraft 26.1** - Full support for Fabric 26.1 (Java 25)
+- **Removed Multi-Platform Support** - Removed NeoForge and Quilt loader support, transitioned to Fabric-only project
 
-> **注意**：从 v1.0.3 起，项目已转为纯 Fabric 模组，不再支持 NeoForge 和 Quilt。
+> **Note**: Starting from v1.0.3, this project is now a Fabric-only mod. NeoForge and Quilt are no longer supported.
 
-### 技术更新
-- **构建链升级**：
-  - Fabric Loom 升级至 1.15-SNAPSHOT
-  - Java 版本升级至 25
-  - 移除 Mappings 依赖（使用 Mojang 官方命名）
-  
-- **API 适配**：
-  - 修复 `ServerPlayer.displayClientMessage()` 移除导致的编译错误
-  - 新增 `tools.sendPlayerMessage()` 统一消息发送方法（Action Bar 使用 `ClientboundSetActionBarTextPacket`，聊天使用 `sendSystemMessage`）
-  - 适配 sgui 2.0+ 新 API（`setCallback` 签名变更）
-  - 移除 `GuiElementBuilder.setSkullOwner()` 调用（API 已移除）
+### Technical Updates
+- **Build Chain Upgrade**:
+  - Fabric Loom upgraded to 1.15-SNAPSHOT
+  - Java version upgraded to 25
+  - Removed Mappings dependency (using Mojang official mappings)
 
-### 修复
-- 修复 GUI 回调方法歧义错误
-- 修复所有命令类中已弃用的消息发送 API 调用
+- **API Adaptations**:
+  - Fixed compilation errors caused by removal of `ServerPlayer.displayClientMessage()`
+  - Added `tools.sendPlayerMessage()` unified message sending method (Action Bar uses `ClientboundSetActionBarTextPacket`, chat uses `sendSystemMessage`)
+  - Adapted to sgui 2.0+ new API (`setCallback` signature changes)
+  - Removed `GuiElementBuilder.setSkullOwner()` calls (API removed)
+
+### Bug Fixes
+- Fixed GUI callback method ambiguity errors
+- Fixed deprecated message sending API calls in all command classes
 
 ---
 
 ## [1.0.2] - 2026-03-23
 
-### 新增
-- 配置项 `tpa.requestExpireReminder`：TPA 请求过期前的提醒时间（秒），设为 `0` 可禁用提醒（原固定 30 秒）
-- `/spawn` 命令现在读取配置中的 `spawn.world_id`，支持自定义出生点所在维度（此前硬编码为主世界）
+### Added
+- Config option `tpa.requestExpireReminder`: Reminder time before TPA request expires (seconds). Set to `0` to disable (previously fixed at 30 seconds)
+- `/spawn` command now reads `spawn.world_id` from config, supporting custom spawn dimensions (previously hardcoded to Overworld)
 
-### 修复
-- 修复 `StorageManager.cleanup()` 在 for-each 循环中直接删除元素导致的 `ConcurrentModificationException`
-- 修复 `StorageLoader` 和 `StorageMigrator` 中 `FileReader` 未关闭导致的资源泄漏
-- 修复 `StorageLoader` 在存储文件不存在时初始化后未提前返回，导致继续执行迁移逻辑的问题
-- 修复 `tpa.java` 中 `exportBuiltinLangFiles()` 重复调用 `listFiles()` 存在的竞态隐患
-- 修复 TPA 请求接受/拒绝后，过期提醒 Timer 仍会触发并发送无效消息的问题
-- 修复 TPA 接受/拒绝按钮的点击命令未对玩家名加引号，导致名字含空格时命令解析失败的问题
-- 修复 `DeathLocationStorage` 使用非线程安全 `HashMap`，改为 `ConcurrentHashMap`
-- 修复 `/rtp` 命令仅尝试一次随机位置，在海洋、空岛等地形下几乎必然失败的问题，改为最多重试 10 次
-- 删除 `warp.java` 中遗留的调试用 `System.out.println` 输出
+### Fixed
+- Fixed `ConcurrentModificationException` in `StorageManager.cleanup()` when removing elements during for-each loop
+- Fixed resource leaks in `StorageLoader` and `StorageMigrator` where `FileReader` was not closed
+- Fixed `StorageLoader` not returning early after initialization when storage file doesn't exist, causing continued migration logic
+- Fixed race condition in `tpa.java` `exportBuiltinLangFiles()` due to repeated `listFiles()` calls
+- Fixed TPA expiration reminder Timer still triggering and sending invalid messages after request accept/deny
+- Fixed TPA accept/deny button click commands not quoting player names, causing parsing failures for names with spaces
+- Fixed `DeathLocationStorage` using non-thread-safe `HashMap`, changed to `ConcurrentHashMap`
+- Fixed `/rtp` command only attempting one random location, which almost always failed in ocean/void worlds. Now retries up to 10 times
+- Removed leftover debug `System.out.println` in `warp.java`
 
-### 改进
-- `tools.getTranslatedText()` 添加语言文件内存缓存，避免每次发送消息都读取磁盘，提升性能
-- `TeleportDelayManager` 和 `tools` 中的 `Random` 改为 `ThreadLocalRandom`，消除多线程竞争
-- 移除未使用的 `ModCommand` 枚举
-- 移除已被 GUI 替代的 `PrintHomes()` 和 `PrintWarps()` 死代码方法
+### Improved
+- Added in-memory cache for `tools.getTranslatedText()`, avoiding disk reads on every message, improving performance
+- Changed `Random` to `ThreadLocalRandom` in `TeleportDelayManager` and `tools` to eliminate multi-threading contention
+- Removed unused `ModCommand` enum
+- Removed dead code methods `PrintHomes()` and `PrintWarps()` that were replaced by GUI
 
 ---
 
 ## [1.0.1] - 2026-03-21
 
-### 新增
-- `/rtp` 指令：随机传送到世界各处，支持指定维度
-- 配置项 `rtp.enabled`：启用/禁用随机传送功能
-- 配置项 `rtp.minRange` 和 `rtp.maxRange`：设置随机传送范围（方块）
-- 配置文件自动升级：新版本启动时自动检测并补全缺失的配置项
-- 配置文件每项配置自动写入中文注释，方便直接阅读和编辑
-- 添加 Quilt 支持（基于 Fabric 兼容层构建）
-- 创建 NeoForge 子项目
+### Added
+- `/rtp` command: Random teleportation to random locations in the world, supports dimension specification
+- Config option `rtp.enabled`: Enable/disable random teleport feature
+- Config options `rtp.minRange` and `rtp.maxRange`: Set random teleport range (blocks)
+- Configuration auto-upgrade: Automatically detects and fills missing config options on new version startup
+- Chinese comments automatically added to each config item for easy reading and editing
+- Added Quilt support (built on Fabric compatibility layer)
+- Created NeoForge subproject
 
-### 修复
-- 修复 `/tpaaccept` 和 `/tpadeny` 命令权限检查导致需要确认执行的问题
-- 修复 `/back` 和 `/spawn` 命令的强制传送按钮权限检查问题
-- 修复 snakeyaml 依赖在服务器重启后丢失的问题（使用 Gradle `include` 正确打包依赖）
-- 修复 tpa 传送倒计时期间移动检测不生效的问题（改为主线程读取玩家位置）
+### Fixed
+- Fixed `/tpaaccept` and `/tpadeny` command permission checks requiring confirmation execution
+- Fixed `/back` and `/spawn` command force teleport button permission check issues
+- Fixed snakeyaml dependency loss after server restart (properly bundled using Gradle `include`)
+- Fixed TPA teleport countdown movement detection not working (changed to main thread player position reading)
 
-### 改进
-- 配置系统支持增量更新，新增配置项不会覆盖用户已修改的内容
-- 所有聊天框按钮统一使用链式写法
-- `settings.gradle` 新增 NeoForge / Quilt Maven 仓库，并通过 `exclusiveContent` 精确过滤依赖来源
+### Improved
+- Config system supports incremental updates, new config items won't overwrite user-modified content
+- All chat box buttons unified to use chained syntax
+- `settings.gradle` added NeoForge / Quilt Maven repositories, with `exclusiveContent` for precise dependency filtering
 
 ---
 
 ## [1.0.0] - 2026-03-16
 
-### 新增
-- `/tpals` 指令：显示所有可用指令及其说明
-- `/tpa` 延迟传送系统：接受请求后倒计时（默认 3 秒），期间显示 actionbar 倒计时与附魔台粒子效果
-- 配置项 `tpa.delay`：设置传送前等待秒数，0 为立即传送
-- 配置项 `tpa.cancelOnMove`：移动时自动取消待执行的传送
-- 支持语言：`zh_cn`（简体中文）、`en_us`（English）
+### Added
+- `/tpals` command: Display all available commands and their descriptions
+- `/tpa` delayed teleport system: Countdown after accepting request (default 3 seconds), with actionbar countdown and enchanting table particle effects
+- Config option `tpa.delay`: Set teleport wait time in seconds, 0 for instant teleport
+- Config option `tpa.cancelOnMove`: Cancel pending teleport when player moves
+- Language support: `zh_cn` (Simplified Chinese), `en_us` (English)
 
-### 修复
-- 无
+### Fixed
+- None

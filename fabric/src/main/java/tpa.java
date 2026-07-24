@@ -1,11 +1,22 @@
 package tpa;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.brigadier.CommandDispatcher;
+import tpa.StorageConvertCommand;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.core.BlockPos;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,6 +34,9 @@ public class tpa {
 	private static final String[] BUILTIN_LANGS = {
 		"en_us", "zh_cn"
 	};
+	private static final Gson LANG_GSON = new GsonBuilder()
+			.setPrettyPrinting()
+			.create();
 
 	// Gets ran when the server starts, initializes the mod :3
 	public static void initializeMod(MinecraftServer server) {
@@ -37,39 +51,113 @@ public class tpa {
 		StorageManager.StorageInit();
 		DeathLocationStorage.clearDeathLocations();
 
-		// Export built-in language files to config/tpa/lang/ (only if they don't exist yet)
-		exportBuiltinLangFiles();
+		// Synchronize managed built-in language files on every startup.
+		syncBuiltinLangFiles();
 	}
 
-	// Copies built-in language files into config/tpa/lang/ if the directory is empty or missing
-	private static void exportBuiltinLangFiles() {
+	/**
+	 * Synchronizes zh_cn.json and en_us.json with their bundled key sets.
+	 * Existing values are preserved, new bundled keys are added, and keys no
+	 * longer present in the bundled file are removed. Other language files are
+	 * user-managed and are never modified.
+	 */
+	private static void syncBuiltinLangFiles() {
 		try {
 			Files.createDirectories(LANG_DIR);
-
-			// Check if the lang directory has any .json files already
-			java.io.File[] existingLangFiles = LANG_DIR.toFile().listFiles(
-				(dir, name) -> name.endsWith(".json")
-			);
-			boolean hasAnyLangFile = existingLangFiles != null && existingLangFiles.length > 0;
-
-			if (!hasAnyLangFile) {
-				Constants.LOGGER.info("No language files found in lang/ directory, copying built-in language files...");
-				for (String lang : BUILTIN_LANGS) {
-					Path dest = LANG_DIR.resolve(lang + ".json");
-					String resourcePath = String.format("/assets/%s/lang/%s.json", Constants.MOD_ID, lang);
-					try (InputStream is = tpa.class.getResourceAsStream(resourcePath)) {
-						if (is != null) {
-							Files.copy(is, dest, StandardCopyOption.REPLACE_EXISTING);
-							Constants.LOGGER.info("Copied language file: {}", lang);
-						}
-					}
-				}
-				Constants.LOGGER.info("Language files exported to: {}", LANG_DIR);
-			} else {
-				Constants.LOGGER.info("Language files found in lang/ directory, skipping export.");
+			for (String lang : BUILTIN_LANGS) {
+				syncBuiltinLangFile(lang);
 			}
+			tools.clearLangCache();
 		} catch (Exception e) {
-			Constants.LOGGER.error("Failed to export built-in language files! => ", e);
+			Constants.LOGGER.error("Failed to synchronize built-in language files! => ", e);
+		}
+	}
+
+	private static void syncBuiltinLangFile(String lang) throws Exception {
+		String resourcePath = String.format(
+				"/assets/%s/lang/%s.json", Constants.MOD_ID, lang);
+		JsonObject bundled;
+
+		try (InputStream stream = tpa.class.getResourceAsStream(resourcePath)) {
+			if (stream == null) {
+				Constants.LOGGER.error(
+						"Bundled language resource was not found: {}", resourcePath);
+				return;
+			}
+			try (Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+				bundled = JsonParser.parseReader(reader).getAsJsonObject();
+			}
+		}
+
+		Path destination = LANG_DIR.resolve(lang + ".json");
+		JsonObject existing = new JsonObject();
+		boolean invalidExistingFile = false;
+
+		if (Files.exists(destination) && Files.size(destination) > 0) {
+			try (Reader reader = Files.newBufferedReader(
+					destination, StandardCharsets.UTF_8)) {
+				existing = JsonParser.parseReader(reader).getAsJsonObject();
+			} catch (Exception e) {
+				invalidExistingFile = true;
+				Path backup = LANG_DIR.resolve(
+						lang + ".json.invalid-" + System.currentTimeMillis() + ".bak");
+				Files.copy(destination, backup, StandardCopyOption.REPLACE_EXISTING);
+				Constants.LOGGER.warn(
+						"Invalid language file {} was backed up to {} and will be rebuilt.",
+						destination, backup);
+			}
+		}
+
+		JsonObject synchronizedEntries = new JsonObject();
+		int added = 0;
+		int preserved = 0;
+
+		for (var entry : bundled.entrySet()) {
+			String key = entry.getKey();
+			JsonElement existingValue = existing.get(key);
+			if (existingValue != null && existingValue.isJsonPrimitive()
+					&& existingValue.getAsJsonPrimitive().isString()) {
+				synchronizedEntries.add(key, existingValue.deepCopy());
+				preserved++;
+			} else {
+				synchronizedEntries.add(key, entry.getValue().deepCopy());
+				added++;
+			}
+		}
+
+		int removed = Math.max(0, existing.size() - preserved);
+		boolean changed = invalidExistingFile
+				|| !Files.exists(destination)
+				|| added > 0
+				|| removed > 0;
+
+		if (changed) {
+			writeLanguageFileAtomically(destination, synchronizedEntries);
+			Constants.LOGGER.info(
+					"Synchronized language file {} (added: {}, removed: {}, preserved: {}).",
+					lang, added, removed, preserved);
+		} else {
+			Constants.LOGGER.info(
+					"Language file {} is up to date; custom values were preserved.", lang);
+		}
+	}
+
+	private static void writeLanguageFileAtomically(
+			Path destination, JsonObject entries) throws Exception {
+		Path temporary = destination.resolveSibling(
+				destination.getFileName() + ".tmp");
+		try (Writer writer = Files.newBufferedWriter(
+				temporary, StandardCharsets.UTF_8)) {
+			LANG_GSON.toJson(entries, writer);
+		}
+
+		try {
+			Files.move(temporary, destination,
+					StandardCopyOption.REPLACE_EXISTING,
+					StandardCopyOption.ATOMIC_MOVE);
+		} catch (AtomicMoveNotSupportedException e) {
+			Files.move(temporary, destination,
+					StandardCopyOption.REPLACE_EXISTING);
 		}
 	}
 
@@ -82,6 +170,7 @@ public class tpa {
 		worldspawn.register(dispatcher);
 		tpals.register(dispatcher);
 		rtp.register(dispatcher);
+        StorageConvertCommand.register(dispatcher);
 
 	}
 

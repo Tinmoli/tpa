@@ -78,6 +78,8 @@
   "commands.teleport_commands.tpals.tpahere": "请求将玩家传送到你这里",
   "commands.teleport_commands.tpals.tpaaccept": "接受传送请求",
   "commands.teleport_commands.tpals.tpadeny": "拒绝传送请求",
+  "commands.teleport_commands.tpals.storage_json_to_sqlite": "将 JSON 数据转换为 SQLite（仅管理员）",
+  "commands.teleport_commands.tpals.storage_sqlite_to_json": "将 SQLite 数据转换为 JSON（仅管理员）",
   "commands.teleport_commands.tpals.tpagui": "打开传送GUI",
   "commands.teleport_commands.tpals.rtp": "随机传送到世界",
 
@@ -88,14 +90,26 @@
   "gui.teleport_commands.common.next_page": "下一页",
   "gui.teleport_commands.common.close": "关闭菜单",
 
+  "gui.teleport_commands.icon_picker.title": "为 %0% 选择图标",
+  "gui.teleport_commands.icon_picker.select": "点击选择此图标",
+  "gui.teleport_commands.icon_picker.back": "返回上一菜单",
+  "gui.teleport_commands.icon_picker.reset": "恢复默认图标",
+
   "gui.teleport_commands.homes.title": "传送点 (%0%/%1%)",
-  "gui.teleport_commands.homes.hint": "左键传送 | 右键删除",
+  "gui.teleport_commands.homes.hint_actions": "左键传送 | 中键设为默认 | 右键删除",
+  "gui.teleport_commands.homes.hint_icons": "Shift+左键选择图标 | Shift+右键重置图标",
+  "gui.teleport_commands.homes.icon_set": "传送点图标已设置！",
+  "gui.teleport_commands.homes.icon_reset": "传送点图标已恢复默认！",
 
   "gui.teleport_commands.warps.title": "公共传送点 (%0%个)",
   "gui.teleport_commands.warps.hint": "左键传送",
-  "gui.teleport_commands.warps.hint_admin": "左键传送 | 右键删除（管理员）",
+  "gui.teleport_commands.warps.hint_admin_actions": "左键传送 | 右键删除",
+  "gui.teleport_commands.warps.hint_admin_icons": "Shift+左键选择图标 | Shift+右键重置图标",
+  "gui.teleport_commands.warps.icon_set": "公共传送点图标已设置！",
+  "gui.teleport_commands.warps.icon_reset": "公共传送点图标已恢复默认！",
 
   "gui.teleport_commands.tpa.title": "传送 - 选择玩家 (%0%人)",
   "gui.teleport_commands.tpa.hint_left": "左键: 请求传送到对方",
-  "gui.teleport_commands.tpa.hint_right": "右键: 请求对方传送到你"
+  "gui.teleport_commands.tpa.hint_right": "右键: 请求对方传送到你",
+  "commands.teleport_commands.home.maximum": "你设置的家已达到数量上限！"
 }

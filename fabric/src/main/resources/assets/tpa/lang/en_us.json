@@ -78,6 +78,8 @@
   "commands.teleport_commands.tpals.tpahere": "Request player to teleport to you",
   "commands.teleport_commands.tpals.tpaaccept": "Accept a teleport request",
   "commands.teleport_commands.tpals.tpadeny": "Deny a teleport request",
+  "commands.teleport_commands.tpals.storage_json_to_sqlite": "Convert JSON data to SQLite (admin only)",
+  "commands.teleport_commands.tpals.storage_sqlite_to_json": "Convert SQLite data to JSON (admin only)",
   "commands.teleport_commands.tpals.tpagui": "Open teleport GUI",
   "commands.teleport_commands.tpals.rtp": "Random teleport in world",
 
@@ -88,14 +90,26 @@
   "gui.teleport_commands.common.next_page": "Next Page",
   "gui.teleport_commands.common.close": "Close Menu",
 
+  "gui.teleport_commands.icon_picker.title": "Choose an icon for %0%",
+  "gui.teleport_commands.icon_picker.select": "Click to select this icon",
+  "gui.teleport_commands.icon_picker.back": "Back to previous menu",
+  "gui.teleport_commands.icon_picker.reset": "Restore default icon",
+
   "gui.teleport_commands.homes.title": "Waypoints (%0%/%1%)",
-  "gui.teleport_commands.homes.hint": "Left click: Teleport | Right click: Delete",
+  "gui.teleport_commands.homes.hint_actions": "Left: Teleport | Middle: Set default | Right: Delete",
+  "gui.teleport_commands.homes.hint_icons": "Shift+Left: Choose icon | Shift+Right: Reset icon",
+  "gui.teleport_commands.homes.icon_set": "Home icon updated!",
+  "gui.teleport_commands.homes.icon_reset": "Home icon reset to default!",
 
   "gui.teleport_commands.warps.title": "Public Waypoints (%0%)",
   "gui.teleport_commands.warps.hint": "Left click: Teleport",
-  "gui.teleport_commands.warps.hint_admin": "Left click: Teleport | Right click: Delete (Admin)",
+  "gui.teleport_commands.warps.hint_admin_actions": "Left: Teleport | Right: Delete",
+  "gui.teleport_commands.warps.hint_admin_icons": "Shift+Left: Choose icon | Shift+Right: Reset icon",
+  "gui.teleport_commands.warps.icon_set": "Public warp icon updated!",
+  "gui.teleport_commands.warps.icon_reset": "Public warp icon reset to default!",
 
   "gui.teleport_commands.tpa.title": "Teleport - Select Player (%0%)",
   "gui.teleport_commands.tpa.hint_left": "Left click: Request to teleport to them",
-  "gui.teleport_commands.tpa.hint_right": "Right click: Request them to teleport to you"
+  "gui.teleport_commands.tpa.hint_right": "Right click: Request them to teleport to you",
+  "commands.teleport_commands.home.maximum": "You have reached the maximum number of homes."
 }

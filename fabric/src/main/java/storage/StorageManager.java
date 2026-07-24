@@ -15,6 +15,7 @@ import static java.util.Collections.unmodifiableList;
 public class StorageManager {
     public static Path STORAGE_FOLDER;
     public static Path STORAGE_FILE;
+    public static Path SQLITE_FILE;
     public static StorageClass STORAGE;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final int defaultVersion = new StorageClass().getVersion();
@@ -23,9 +24,15 @@ public class StorageManager {
     public static void StorageInit() {
         STORAGE_FOLDER = tpa.CONFIG_DIR;
         STORAGE_FILE = STORAGE_FOLDER.resolve("storage.json");
+        SQLITE_FILE = STORAGE_FOLDER.resolve("storage.db");
 
         try {
-            StorageLoader();
+            if ("sqlite".equalsIgnoreCase(ConfigManager.CONFIG.storage.getBackend())) {
+                STORAGE = SqliteStorage.load(SQLITE_FILE);
+                STORAGE.cleanup();
+            } else {
+                StorageLoader();
+            }
         } catch (Exception e) {
             Constants.LOGGER.error("Error while initializing the storage file! Exiting! => ", e);
             throw new RuntimeException("Error while initializing the storage file! Exiting! => ", e);
@@ -108,8 +115,25 @@ public class StorageManager {
 
     /// Saves the storage to the filesystem
     public static void StorageSaver() throws Exception {
-        byte[] json = GSON.toJson(StorageManager.STORAGE).getBytes();
-        Files.write(STORAGE_FILE, json, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+        if ("sqlite".equalsIgnoreCase(ConfigManager.CONFIG.storage.getBackend())) {
+            SqliteStorage.save(SQLITE_FILE, STORAGE);
+        } else {
+            writeJsonFile(STORAGE_FILE, STORAGE);
+        }
+    }
+
+    public static StorageClass loadJsonFile(Path file) throws Exception {
+        if (!Files.exists(file) || Files.size(file) == 0) return new StorageClass();
+        try (FileReader reader = new FileReader(file.toFile())) {
+            StorageClass result = GSON.fromJson(reader, StorageClass.class);
+            return result == null ? new StorageClass() : result;
+        }
+    }
+
+    public static void writeJsonFile(Path file, StorageClass value) throws Exception {
+        Files.createDirectories(file.getParent());
+        byte[] json = GSON.toJson(value).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        Files.write(file, json, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
     }
 
 

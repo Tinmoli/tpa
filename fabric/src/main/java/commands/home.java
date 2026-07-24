@@ -174,6 +174,14 @@ public class home {
         // Create the NamedLocation
         NamedLocation warp = new NamedLocation(homeName, blockPos, worldString);
 
+        // Enforce the configured per-player limit before adding a new home.
+        int maximum = ConfigManager.CONFIG.home.getPlayerMaximum();
+        if (playerStorage.getHome(homeName).isEmpty() && (maximum <= 0 || playerStorage.getHomes().size() >= maximum)) {
+            sendPlayerMessage(player, getTranslatedText("commands.teleport_commands.home.maximum", player)
+                    .withStyle(ChatFormatting.RED), true);
+            return;
+        }
+
         // Adds the home, returns true if the home already exists
         boolean homeExists = playerStorage.addHome(warp);
 

@@ -90,36 +90,43 @@ public class ConfigManager {
         rtp.put("minRange", cfg.rtp.minRange);
         rtp.put("maxRange", cfg.rtp.maxRange);
         root.put("rtp", rtp);
+        LinkedHashMap<String, Object> storage = new LinkedHashMap<>();
+        storage.put("backend", cfg.storage.backend);
+        root.put("storage", storage);
 
         Files.createDirectories(CONFIG_FILE.getParent());
         StringWriter sw = new StringWriter();
         yaml.dump(root, sw);
         String raw = insertComments(sw.toString());
-        try (Writer writer = new FileWriter(CONFIG_FILE.toFile())) {
-            writer.write("# TPA 插件配置文件\n# 修改后需重启服务器生效\n\n");
+        try (Writer writer = new OutputStreamWriter(
+                new FileOutputStream(CONFIG_FILE.toFile()),
+                java.nio.charset.StandardCharsets.UTF_8)) {
+            writer.write("# TPA 模组配置文件\n# 修改后需重启服务器生效\n\n");
             writer.write(raw);
         }
     }
 
     private static String insertComments(String yaml) {
         String[][] rules = {
-            {"language:",        "# 语言设置，可选值: zh_cn, en_us"},
-            {"back:",            "# /back 命令配置"},
-            {"home:",            "# /home 命令配置"},
-            {"tpa:",             "# /tpa 命令配置"},
-            {"warp:",            "# /warp 命令配置"},
-            {"spawn:",           "# /spawn 命令配置"},
-            {"rtp:",             "# /rtp 命令配置"},
+            {"language:",              "# 语言设置，可选值：zh_cn、en_us"},
+            {"back:",                  "# /back 命令配置"},
+            {"home:",                  "# /home 命令配置"},
+            {"tpa:",                   "# /tpa 命令配置"},
+            {"warp:",                  "# /warp 命令配置"},
+            {"spawn:",                 "# /spawn 命令配置"},
+            {"rtp:",                   "# /rtp 命令配置"},
+            {"storage:",               "# 数据存储配置"},
             {"  enabled:",             "  # 是否启用该命令"},
             {"  deleteAfterTeleport:", "  # 传送后是否删除死亡位置记录"},
-            {"  playerMaximum:",       "  # 每位玩家最多可以设置的家的数量"},
-            {"  deleteInvalid:",       "  # 是否自动删除无效的位置（世界不存在时）"},
+            {"  playerMaximum:",       "  # 每位玩家最多可以设置的家的数量；0 表示禁止新增"},
+            {"  deleteInvalid:",       "  # 是否自动删除世界不存在的无效位置"},
             {"  delay:",               "  # 传送等待时间（秒），0 表示立即传送"},
             {"  cancelOnMove:",        "  # 传送等待期间移动是否取消传送"},
-            {"  requestExpireReminder:", "  # TPA 请求过期前的提醒时间（秒），0 表示不提醒"},
+            {"  requestExpireReminder:", "  # TPA 请求过期提醒时间（秒），0 表示不提醒"},
             {"  world_id:",            "  # 出生点所在世界的 ID，默认为主世界"},
             {"  minRange:",            "  # 随机传送最小范围（方块）"},
             {"  maxRange:",            "  # 随机传送最大范围（方块）"},
+            {"  backend:",             "  # 存储后端：json 或 sqlite"},
         };
         StringBuilder sb = new StringBuilder();
         for (String line : yaml.split("\n", -1)) {
@@ -138,7 +145,7 @@ public class ConfigManager {
             Yaml yaml = new Yaml();
             Map<String, Object> data = yaml.load(is);
             if (data == null) return true;
-            return !data.containsKey("rtp") || !data.containsKey("back") ||
+            return !data.containsKey("rtp") || !data.containsKey("storage") || !data.containsKey("back") ||
                    !data.containsKey("home") || !data.containsKey("tpa") ||
                    !data.containsKey("warp") || !data.containsKey("spawn");
         }
@@ -177,11 +184,27 @@ public class ConfigManager {
             if (s.containsKey("enabled"))  cfg.spawn.enabled  = (boolean) s.get("enabled");
             if (s.containsKey("world_id")) cfg.spawn.world_id = (String)  s.get("world_id");
         }
+        if (data.containsKey("storage")) {
+            Map<String, Object> st = (Map<String, Object>) data.get("storage");
+            if (st.containsKey("backend")) cfg.storage.backend = String.valueOf(st.get("backend"));
+        }
         if (data.containsKey("rtp")) {
             Map<String, Object> r = (Map<String, Object>) data.get("rtp");
             if (r.containsKey("enabled"))  cfg.rtp.enabled  = (boolean) r.get("enabled");
             if (r.containsKey("minRange")) cfg.rtp.minRange = (int)     r.get("minRange");
             if (r.containsKey("maxRange")) cfg.rtp.maxRange = (int)     r.get("maxRange");
+        }
+        if (!"json".equalsIgnoreCase(cfg.storage.backend)
+                && !"sqlite".equalsIgnoreCase(cfg.storage.backend)) {
+            Constants.LOGGER.warn("Unknown storage backend '{}'; falling back to sqlite.",
+                    cfg.storage.backend);
+            cfg.storage.backend = "sqlite";
+        } else {
+            cfg.storage.backend = cfg.storage.backend.toLowerCase(java.util.Locale.ROOT);
+        }
+        if (cfg.home.playerMaximum < 0) {
+            Constants.LOGGER.warn("home.playerMaximum cannot be negative; using 0.");
+            cfg.home.playerMaximum = 0;
         }
         return cfg;
     }
@@ -194,6 +217,7 @@ public class ConfigManager {
         public Warp  warp  = new Warp();
         public Spawn spawn = new Spawn();
         public Rtp   rtp   = new Rtp();
+        public Storage storage = new Storage();
 
         public static class Back {
             public boolean enabled = true;
@@ -233,6 +257,10 @@ public class ConfigManager {
             public boolean isEnabled()   { return enabled; }
             public String  getWorld_id() { return world_id; }
         }
+        public static class Storage {
+            public String backend = "sqlite";
+            public String getBackend() { return backend; }
+        }
         public static class Rtp {
             public boolean enabled = true;
             public int minRange = 1000;
@@ -243,3 +271,5 @@ public class ConfigManager {
         }
     }
 }
+
+

@@ -27,19 +27,21 @@ repositories {
         }
         filter { includeGroupAndSubgroups('org.spongepowered') }
     }
-    maven { url "https://maven.nucleoid.xyz" }
+    maven { url = "https://maven.nucleoid.xyz" }
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
-    compileOnly group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
-    annotationProcessor group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
+    compileOnly 'org.spongepowered:mixin:0.8.5'
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.3.5'
+    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.3.5'
     // YAML config support - bundled into the JAR via Loom's include
     include(implementation('org.yaml:snakeyaml:2.2'))
     // sgui - server-side GUI
     include(implementation("eu.pb4:sgui:${sgui_version}"))
+    // SQLite runtime backend
+    include(implementation("org.xerial:sqlite-jdbc:3.46.1.0"))
 }
 
 tasks.withType(JavaCompile).configureEach {

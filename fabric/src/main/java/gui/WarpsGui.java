@@ -9,9 +9,12 @@ import eu.pb4.sgui.api.ClickType;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.SimpleGui;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
@@ -51,19 +54,44 @@ public class WarpsGui extends SimpleGui {
             Component coords = Component.literal(String.format("X%d Y%d Z%d", warp.getX(), warp.getY(), warp.getZ()))
                     .withStyle(ChatFormatting.GRAY);
             Component world = Component.literal(warp.getWorldString()).withStyle(ChatFormatting.DARK_GRAY);
-            Component hint = canModify
-                    ? getTranslatedText("gui.teleport_commands.warps.hint_admin", player).withStyle(ChatFormatting.YELLOW)
-                    : getTranslatedText("gui.teleport_commands.warps.hint", player).withStyle(ChatFormatting.YELLOW);
+            Component actionHint = canModify
+                    ? getTranslatedText(
+                            "gui.teleport_commands.warps.hint_admin_actions", player)
+                            .withStyle(ChatFormatting.YELLOW)
+                    : getTranslatedText(
+                            "gui.teleport_commands.warps.hint", player)
+                            .withStyle(ChatFormatting.YELLOW);
+            Component iconHint = canModify
+                    ? getTranslatedText(
+                            "gui.teleport_commands.warps.hint_admin_icons", player)
+                            .withStyle(ChatFormatting.YELLOW)
+                    : null;
 
             int slot = i - start;
-            setSlot(slot, new GuiElementBuilder(Items.ENDER_EYE)
+            Item displayIcon = resolveIcon(warp);
+            setSlot(slot, new GuiElementBuilder(displayIcon)
                     .setName(name)
                     .addLoreLine(coords)
                     .addLoreLine(world)
                     .addLoreLine(Component.empty())
-                    .addLoreLine(hint)
+                    .addLoreLine(actionHint)
+                    .addLoreLine(iconHint != null ? iconHint : Component.empty())
                     .setCallback(type -> {
-                        if (type == ClickType.MOUSE_LEFT) {
+                        if (type == ClickType.MOUSE_LEFT_SHIFT && canModify) {
+                            close();
+                            new IconPickerGui(player, warp, true, () ->
+                                    new WarpsGui(player, new ArrayList<>(warps)).open()).open();
+                        } else if (type == ClickType.MOUSE_RIGHT_SHIFT && canModify) {
+                            try {
+                                warp.setIcon("");
+                                sendPlayerMessage(player,
+                                        getTranslatedText("gui.teleport_commands.warps.icon_reset", player)
+                                                .withStyle(ChatFormatting.GREEN), true);
+                                build();
+                            } catch (Exception ex) {
+                                Constants.LOGGER.error("Error resetting warp icon", ex);
+                            }
+                        } else if (type == ClickType.MOUSE_LEFT) {
                             warp.getWorld().ifPresent(w -> {
                                 close();
                                 sendPlayerMessage(player,
@@ -88,6 +116,17 @@ public class WarpsGui extends SimpleGui {
         }
 
         fillNavBar();
+    }
+
+    private Item resolveIcon(NamedLocation warp) {
+        String iconId = warp.getIcon();
+        if (!iconId.isBlank()) {
+            Identifier id = Identifier.tryParse(iconId);
+            if (id != null && BuiltInRegistries.ITEM.containsKey(id)) {
+                return BuiltInRegistries.ITEM.getValue(id);
+            }
+        }
+        return Items.ENDER_EYE;
     }
 
     private void fillNavBar() {

@@ -11,9 +11,12 @@ import eu.pb4.sgui.api.ClickType;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.SimpleGui;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
@@ -64,18 +67,65 @@ public class HomesGui extends SimpleGui {
                     .withStyle(ChatFormatting.GRAY);
             Component world = Component.literal(home.getWorldString())
                     .withStyle(ChatFormatting.DARK_GRAY);
-            Component hint = getTranslatedText("gui.teleport_commands.homes.hint", player)
+            Component actionHint = getTranslatedText(
+                    "gui.teleport_commands.homes.hint_actions", player)
+                    .withStyle(ChatFormatting.YELLOW);
+            Component iconHint = getTranslatedText(
+                    "gui.teleport_commands.homes.hint_icons", player)
                     .withStyle(ChatFormatting.YELLOW);
 
             int slot = i - start;
-            setSlot(slot, new GuiElementBuilder(isDefault ? Items.YELLOW_BED : Items.CYAN_BED)
+            Item displayIcon = resolveIcon(home, isDefault);
+            setSlot(slot, new GuiElementBuilder(displayIcon)
                     .setName(name)
                     .addLoreLine(coords)
                     .addLoreLine(world)
                     .addLoreLine(Component.empty())
-                    .addLoreLine(hint)
+                    .addLoreLine(actionHint)
+                    .addLoreLine(iconHint)
                     .setCallback(type -> {
-                        if (type == ClickType.MOUSE_LEFT) {
+                        if (type == ClickType.MOUSE_MIDDLE) {
+                            if (playerStorage == null) {
+                                return;
+                            }
+                            if (playerStorage.getDefaultHome().equals(home.getName())) {
+                                sendPlayerMessage(player,
+                                        getTranslatedText(
+                                                "commands.teleport_commands.home.defaultSame",
+                                                player).withStyle(ChatFormatting.AQUA), true);
+                                return;
+                            }
+                            try {
+                                playerStorage.setDefaultHome(home.getName());
+                                sendPlayerMessage(player,
+                                        getTranslatedText(
+                                                "commands.teleport_commands.home.default",
+                                                player).withStyle(ChatFormatting.GREEN), true);
+                                build();
+                            } catch (Exception ex) {
+                                Constants.LOGGER.error(
+                                        "Error setting default home in GUI", ex);
+                                sendPlayerMessage(player,
+                                        getTranslatedText(
+                                                "commands.teleport_commands.home.error",
+                                                player).withStyle(ChatFormatting.RED), true);
+                            }
+                        } else if (type == ClickType.MOUSE_LEFT_SHIFT) {
+                            close();
+                            new IconPickerGui(player, home, false, () ->
+                                    new HomesGui(player, playerStorage,
+                                            new ArrayList<>(homes)).open()).open();
+                        } else if (type == ClickType.MOUSE_RIGHT_SHIFT) {
+                            try {
+                                home.setIcon("");
+                                sendPlayerMessage(player,
+                                        getTranslatedText("gui.teleport_commands.homes.icon_reset", player)
+                                                .withStyle(ChatFormatting.GREEN), true);
+                                build();
+                            } catch (Exception ex) {
+                                Constants.LOGGER.error("Error resetting home icon", ex);
+                            }
+                        } else if (type == ClickType.MOUSE_LEFT) {
                             home.getWorld().ifPresent(world1 -> {
                                 close();
                                 sendPlayerMessage(player,
@@ -112,6 +162,17 @@ public class HomesGui extends SimpleGui {
         }
 
         fillNavBar();
+    }
+
+    private Item resolveIcon(NamedLocation home, boolean isDefault) {
+        String iconId = home.getIcon();
+        if (!iconId.isBlank()) {
+            Identifier id = Identifier.tryParse(iconId);
+            if (id != null && BuiltInRegistries.ITEM.containsKey(id)) {
+                return BuiltInRegistries.ITEM.getValue(id);
+            }
+        }
+        return isDefault ? Items.YELLOW_BED : Items.CYAN_BED;
     }
 
     private void fillNavBar() {

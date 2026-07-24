@@ -41,13 +41,19 @@ public class tpals {
         cmd(msg, "/defaulthome <name>",           "commands.teleport_commands.tpals.defaulthome", player);
         cmd(msg, "/warp <name>",                  "commands.teleport_commands.tpals.warp",        player);
         cmd(msg, "/warps",                         "commands.teleport_commands.tpals.warps",       player);
-        cmd(msg, "/setwarp <name>",               "commands.teleport_commands.tpals.setwarp",     player);
-        cmd(msg, "/delwarp <name>",               "commands.teleport_commands.tpals.delwarp",     player);
-        cmd(msg, "/renamewarp <name> <new>",      "commands.teleport_commands.tpals.renamewarp",  player);
         cmd(msg, "/tpa <player>",                 "commands.teleport_commands.tpals.tpa",         player);
         cmd(msg, "/tpahere <player>",             "commands.teleport_commands.tpals.tpahere",     player);
         cmd(msg, "/tpaaccept <player>",           "commands.teleport_commands.tpals.tpaaccept",   player);
         cmd(msg, "/tpadeny <player>",             "commands.teleport_commands.tpals.tpadeny",     player);
+
+        if (player.createCommandSourceStack().permissions().hasPermission(
+                net.minecraft.server.permissions.Permissions.COMMANDS_OWNER)) {
+            cmd(msg, "/setwarp <name>",                "commands.teleport_commands.tpals.setwarp",                 player);
+            cmd(msg, "/delwarp <name>",                "commands.teleport_commands.tpals.delwarp",                 player);
+            cmd(msg, "/renamewarp <name> <new>",       "commands.teleport_commands.tpals.renamewarp",              player);
+            cmd(msg, "/tpastorage json-to-sqlite",     "commands.teleport_commands.tpals.storage_json_to_sqlite", player);
+            cmd(msg, "/tpastorage sqlite-to-json",     "commands.teleport_commands.tpals.storage_sqlite_to_json", player);
+        }
 
         return msg;
     }
