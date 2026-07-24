@@ -28,7 +28,7 @@ public class warp {
 
         commandDispatcher.register(Commands.literal("setwarp")
                 .requires(source ->
-                        source.getPlayer() != null &&
+                        source.getPlayer() != null && ConfigManager.CONFIG != null && ConfigManager.CONFIG.warp.isEnabled() &&
                                 source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_OWNER)
                 )
                 .then(argument("name", StringArgumentType.greedyString())
@@ -48,7 +48,7 @@ public class warp {
                         })));
 
         commandDispatcher.register(Commands.literal("warp")
-                .requires(source -> source.getPlayer() != null)
+                .requires(source -> source.getPlayer() != null && ConfigManager.CONFIG != null && ConfigManager.CONFIG.warp.isEnabled())
                 .then(argument("name", StringArgumentType.greedyString())
                         .suggests(new WarpSuggestionProvider())
                         .executes(context -> {
@@ -68,7 +68,7 @@ public class warp {
 
         commandDispatcher.register(Commands.literal("delwarp")
                 .requires(source ->
-                        source.getPlayer() != null &&
+                        source.getPlayer() != null && ConfigManager.CONFIG != null && ConfigManager.CONFIG.warp.isEnabled() &&
                                 source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_OWNER)
                 )
                 .then(argument("name", StringArgumentType.greedyString()).suggests(new WarpSuggestionProvider())
@@ -89,7 +89,7 @@ public class warp {
 
         commandDispatcher.register(Commands.literal("renamewarp")
                 .requires(source ->
-                        source.getPlayer() != null &&
+                        source.getPlayer() != null && ConfigManager.CONFIG != null && ConfigManager.CONFIG.warp.isEnabled() &&
                                 source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_OWNER)
                 )
                 .then(argument("name", StringArgumentType.string()).suggests(new WarpSuggestionProvider())
@@ -111,7 +111,7 @@ public class warp {
                                 }))));
 
         commandDispatcher.register(Commands.literal("warps")
-                .requires(source -> source.getPlayer() != null)
+                .requires(source -> source.getPlayer() != null && ConfigManager.CONFIG != null && ConfigManager.CONFIG.warp.isEnabled())
                 .executes(context -> {
                     final ServerPlayer player = context.getSource().getPlayerOrException();
 

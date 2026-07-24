@@ -1,0 +1,71 @@
+import org.gradle.api.tasks.GradleBuild
+
+def minecraftVersions = [
+        "1.21.11",
+        "26.1",
+        "26.1.1",
+        "26.1.2",
+        "26.2"
+]
+
+def versionBuildTasks = minecraftVersions.collect { minecraftVersion ->
+    def taskSuffix = minecraftVersion.replace(".", "_")
+    tasks.register("buildMinecraft${taskSuffix}", GradleBuild) {
+        group = "build"
+        description = "Builds the independent Minecraft ${minecraftVersion} project."
+        dir = file("versions/${minecraftVersion}")
+        tasks = [":fabric:clean", ":fabric:build"]
+        startParameter.buildCacheEnabled = false
+    }
+}
+
+tasks.register("cleanAllVersionArtifacts", Delete) {
+    group = "build"
+    description = "Deletes the combined multi-version output directory."
+    delete(layout.projectDirectory.dir("dist"))
+}
+
+versionBuildTasks.each {
+    it.configure {
+        dependsOn(project.tasks.named("cleanAllVersionArtifacts"))
+    }
+}
+
+tasks.register("collectAllVersionArtifacts") {
+    group = "build"
+    description = "Collects one release JAR from each independent version project."
+    dependsOn(versionBuildTasks)
+
+    doLast {
+        def outputDirectory = layout.projectDirectory.dir("dist").asFile
+        outputDirectory.mkdirs()
+
+        minecraftVersions.each { minecraftVersion ->
+            def librariesDirectory = file(
+                    "versions/${minecraftVersion}/fabric/build/libs")
+            def jars = fileTree(librariesDirectory) {
+                include("*.jar")
+            }.files.toList()
+
+            if (jars.size() != 1) {
+                throw new GradleException(
+                        "Expected exactly one JAR for Minecraft "
+                                + minecraftVersion + ", found " + jars.size())
+            }
+
+            copy {
+                from(jars.first())
+                into(outputDirectory)
+            }
+        }
+
+        logger.lifecycle("All version-specific JARs were collected in {}",
+                outputDirectory)
+    }
+}
+
+tasks.register("buildAllVersions") {
+    group = "build"
+    description = "Builds all supported Minecraft versions and collects their JARs."
+    dependsOn(project.tasks.named("collectAllVersionArtifacts"))
+}

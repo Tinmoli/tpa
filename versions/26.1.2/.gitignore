@@ -1,0 +1,34 @@
+# Gradle
+.gradle/
+.gradle-local/
+build/
+**/build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# Compiled/output directories
+**/bin/
+out/
+
+# Local build archives and logs
+gradle-*-bin.zip
+*-stdout.log
+*-stderr.log
+*-exit-code.txt
+
+# Runtime/server files
+run/
+logs/
+config/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

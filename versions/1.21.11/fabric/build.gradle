@@ -1,0 +1,100 @@
+plugins {
+    id 'fabric-loom' version "${loom_version}"
+}
+
+base {
+    archivesName = "${mod_id}-fabric-${minecraft_version}"
+}
+
+java {
+    // Minecraft 1.21.11 targets Java 21 bytecode, but using the installed
+    // JDK 25 compiler avoids downloading a second JDK in restricted networks.
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
+    sourceCompatibility = JavaVersion.toVersion(java_version)
+    targetCompatibility = JavaVersion.toVersion(java_version)
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'AliyunMirror'
+        url = 'https://maven.aliyun.com/repository/public'
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Sponge'
+                url = 'https://repo.spongepowered.org/repository/maven-public'
+            }
+        }
+        filter { includeGroupAndSubgroups('org.spongepowered') }
+    }
+    maven { url = "https://maven.nucleoid.xyz" }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    compileOnly 'org.spongepowered:mixin:0.8.5'
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.3.5'
+    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.3.5'
+    // Bundle regular libraries.
+    implementation include('org.yaml:snakeyaml:2.2')
+    implementation include('org.xerial:sqlite-jdbc:3.46.1.0')
+    // SGUI is a Fabric mod in intermediary namespace. Declare and include it
+    // in one operation so Loom remaps it exactly once.
+    modImplementation include("eu.pb4:sgui:${sgui_version}")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = Integer.parseInt(java_version)
+}
+
+loom {
+    mixin {
+        useLegacyMixinAp = true
+        defaultRefmapName.set("${mod_id}.refmap.json")
+    }
+}
+
+processResources {
+    def expandProps = [
+        "version"                 : version,
+        "group"                   : project.group,
+        "minecraft_version"       : minecraft_version,
+        "minecraft_version_range" : minecraft_version_range,
+        "loader_version"          : loader_version,
+        "loom_version"            : loom_version,
+        "mod_name"                : mod_name,
+        "mod_author"              : mod_author,
+        "mod_id"                  : mod_id,
+        "license"                 : license,
+        "description"             : project.description,
+        "credits"                 : credits,
+        "java_version"            : java_version
+    ]
+
+    var jsonExpandProps = expandProps.collectEntries {
+        key, value -> [(key): value instanceof String ? value.replace("\n", "\\\\n") : value]
+    }
+
+    filesMatching(['pack.mcmeta', 'fabric.mod.json', '*.mixins.json']) {
+        expand jsonExpandProps
+    }
+
+    inputs.properties(expandProps)
+}
+
+tasks.named("remapJar") {
+    archiveFileName.set("${mod_id}-${project.name}-${minecraft_version}-v${version}.jar")
+}
+
+jar {
+    exclude "**/*.md"
+
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}-${mod_id}" }
+    }
+}

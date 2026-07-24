@@ -15,6 +15,7 @@ build/
 # Compiled/output directories
 **/bin/
 out/
+dist/
 
 # Local build archives and logs
 gradle-*-bin.zip
