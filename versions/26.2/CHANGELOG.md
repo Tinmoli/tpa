@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.5] - 2026-07-26
+
+### Fixed
+- Fixed a regression that made chat TPA accept/deny buttons require an additional command execution confirmation
+
+### Improved
+- `/tpaaccept` and `/tpadeny` now keep unconditional command nodes and check `tpa.enabled` during execution, preserving direct button execution and the configuration switch
+
+---
+
 ## [1.0.4] - 2026-07-24
 
 ### Added
@@ -44,7 +54,7 @@ All notable changes to this project will be documented in this file.
 - Custom GUI icons now hide built-in attack damage, attack speed, and tool attribute lines
 - Negative `home.playerMaximum` values are normalized to `0`
 - Adapted to Minecraft 26.2 combining colored bed and stained glass pane constants into the `ColorCollection` API
-- Replaced the PowerShell build script with the standard Gradle Wrapper `buildAllVersions` task for cross-platform Windows and Linux builds, collecting all five JARs in `dist/`
+- collecting all five JARs in `dist/`
 - Updated the English and Chinese READMEs with fixed SQLite storage and legacy JSON import instructions
 
 ---

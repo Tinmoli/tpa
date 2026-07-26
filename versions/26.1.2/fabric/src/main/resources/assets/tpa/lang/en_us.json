@@ -99,5 +99,6 @@
   "gui.teleport_commands.tpa.hint_right": "Right click: Request them to teleport to you",
   "commands.teleport_commands.home.maximum": "You have reached the maximum number of homes.",
   "commands.teleport_commands.tpa.expiresSoon": "Teleport request expires in %0% seconds",
-  "commands.teleport_commands.tpals.reload": "Reload TPA configuration, SQLite data, and language files (requires administrator permissions)"
+  "commands.teleport_commands.tpals.reload": "Reload TPA configuration, SQLite data, and language files (requires administrator permissions)",
+  "commands.teleport_commands.tpa.disabled": "TPA is currently disabled by an administrator."
 }

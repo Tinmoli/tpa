@@ -4,7 +4,7 @@
 
 A Minecraft server-side mod that adds various teleportation-related commands, including /home, /tpa, /back, /rtp, and more.
 
-Current version: **1.0.4**
+Current version: **1.0.5**
 
 Project URL: [https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 

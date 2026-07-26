@@ -17,6 +17,9 @@ build/
 out/
 dist/
 
+# Local reference source used only for regression comparison
+/Tpa/
+
 # Local build archives and logs
 gradle-*-bin.zip
 *-stdout.log

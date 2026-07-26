@@ -4,7 +4,7 @@
 
 一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back、/rtp 等
 
-当前版本：**1.0.4**
+当前版本：**1.0.5**
 
 项目地址：[https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 

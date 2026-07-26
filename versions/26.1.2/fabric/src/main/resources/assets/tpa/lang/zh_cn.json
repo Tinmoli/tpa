@@ -99,5 +99,6 @@
   "gui.teleport_commands.tpa.hint_right": "右键: 请求对方传送到你",
   "commands.teleport_commands.home.maximum": "你设置的家已达到数量上限！",
   "commands.teleport_commands.tpa.expiresSoon": "传送请求将在 %0% 秒后过期",
-  "commands.teleport_commands.tpals.reload": "重新加载 TPA 配置、SQLite 数据和语言文件（需要管理员权限）"
+  "commands.teleport_commands.tpals.reload": "重新加载 TPA 配置、SQLite 数据和语言文件（需要管理员权限）",
+  "commands.teleport_commands.tpa.disabled": "TPA 功能当前已被管理员禁用。"
 }

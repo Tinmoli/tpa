@@ -3,6 +3,16 @@
 
 ---
 
+## [1.0.5] - 2026-07-26
+
+### 修复
+- 修复聊天中的 TPA 接受/拒绝按钮点击后需要再次确认执行命令的回归问题
+
+### 改进
+- `/tpaaccept` 和 `/tpadeny` 保持无条件命令节点，并在执行阶段检查 `tpa.enabled`，兼顾按钮直接执行与配置开关
+
+---
+
 ## [1.0.4] - 2026-07-24
 
 ### 新增
@@ -44,7 +54,7 @@
 - GUI 自定义图标隐藏镐、武器等物品自带的攻击伤害、攻击速度和工具属性提示
 - 对负数 `home.playerMaximum` 进行校验，并自动修正为 `0`
 - 适配 Minecraft 26.2 将彩色床和染色玻璃板常量整合为 `ColorCollection` 的 API 变化
-- 使用原版 Gradle Wrapper 的跨平台 `buildAllVersions` 任务替代 PowerShell 脚本，Windows 与 Linux 均可构建，五个版本的 JAR 统一输出到 `dist/`
+- 五个版本的 JAR 统一输出到 `dist/`
 - 更新中英文 README，补充固定 SQLite 存储和旧 JSON 数据导入说明
 
 ---

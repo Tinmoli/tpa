@@ -111,43 +111,89 @@ public class TpaCommand {
                             return 0;
                         })));
 
+        // Keep response commands free of a .requires(...) predicate. Recent
+        // clients treat clickable RunCommand events targeting a conditionally
+        // available command as untrusted and ask for execution confirmation.
+        // Runtime checks below preserve tpa.enabled without changing the
+        // command tree, matching the older behavior.
         commandDispatcher.register(Commands.literal("tpaaccept")
-                .requires(source -> source.getPlayer() != null && ConfigManager.CONFIG != null
-                        && ConfigManager.CONFIG.tpa.isEnabled())
                 .executes(context -> {
                     // 无参数：自动接受最新的请求
-                    final ServerPlayer player = context.getSource().getPlayerOrException();
+                    final ServerPlayer player = context.getSource().getPlayer();
+                    if (player == null) {
+                        context.getSource().sendFailure(Component.literal(
+                                "This command can only be used by a player."));
+                        return 0;
+                    }
+                    if (!ensureTpaEnabled(player)) {
+                        return 0;
+                    }
                     try { acceptLatestRequest(player); }
                     catch (Exception e) { Constants.LOGGER.error("Error in /tpaaccept => ", e); return 1; }
                     return 0;
                 })
                 .then(Commands.argument("player", EntityArgument.player()).suggests(new tpaSuggestionProvider())
                         .executes(context -> {
+                            final ServerPlayer player = context.getSource().getPlayer();
+                            if (player == null) {
+                                context.getSource().sendFailure(Component.literal(
+                                        "This command can only be used by a player."));
+                                return 0;
+                            }
+                            if (!ensureTpaEnabled(player)) {
+                                return 0;
+                            }
                             final ServerPlayer initiator = EntityArgument.getPlayer(context, "player");
-                            final ServerPlayer player = context.getSource().getPlayerOrException();
                             try { acceptRequest(player, initiator); }
                             catch (Exception e) { Constants.LOGGER.error("Error in /tpaaccept => ", e); return 1; }
                             return 0;
                         })));
 
         commandDispatcher.register(Commands.literal("tpadeny")
-                .requires(source -> source.getPlayer() != null && ConfigManager.CONFIG != null
-                        && ConfigManager.CONFIG.tpa.isEnabled())
                 .executes(context -> {
                     // 无参数：自动拒绝最新的请求
-                    final ServerPlayer player = context.getSource().getPlayerOrException();
+                    final ServerPlayer player = context.getSource().getPlayer();
+                    if (player == null) {
+                        context.getSource().sendFailure(Component.literal(
+                                "This command can only be used by a player."));
+                        return 0;
+                    }
+                    if (!ensureTpaEnabled(player)) {
+                        return 0;
+                    }
                     try { denyLatestRequest(player); }
                     catch (Exception e) { Constants.LOGGER.error("Error in /tpadeny => ", e); return 1; }
                     return 0;
                 })
                 .then(Commands.argument("player", EntityArgument.player()).suggests(new tpaSuggestionProvider())
                         .executes(context -> {
+                            final ServerPlayer player = context.getSource().getPlayer();
+                            if (player == null) {
+                                context.getSource().sendFailure(Component.literal(
+                                        "This command can only be used by a player."));
+                                return 0;
+                            }
+                            if (!ensureTpaEnabled(player)) {
+                                return 0;
+                            }
                             final ServerPlayer initiator = EntityArgument.getPlayer(context, "player");
-                            final ServerPlayer player = context.getSource().getPlayerOrException();
                             try { denyRequest(player, initiator); }
                             catch (Exception e) { Constants.LOGGER.error("Error in /tpadeny => ", e); return 1; }
                             return 0;
                         })));
+    }
+
+    private static boolean ensureTpaEnabled(ServerPlayer player) {
+        if (ConfigManager.CONFIG != null
+                && ConfigManager.CONFIG.tpa.isEnabled()) {
+            return true;
+        }
+
+        sendPlayerMessage(player,
+                getTranslatedText(
+                        "commands.teleport_commands.tpa.disabled", player)
+                        .withStyle(ChatFormatting.RED), true);
+        return false;
     }
 
     // ----------------------------------------------------------------
