@@ -25,8 +25,10 @@ public class StorageManager {
         SQLITE_FILE = STORAGE_FOLDER.resolve("storage.db");
 
         try {
-            // SQLite is the only active backend. storage.json is retained only
-            // as an import source for /tpastorage json-to-sqlite.
+            // Fresh upgrades from JSON import automatically; existing SQLite always wins.
+            if (!Files.exists(SQLITE_FILE) && Files.isRegularFile(STORAGE_FILE)) {
+                SqliteStorage.importJsonAtomically(STORAGE_FILE, SQLITE_FILE);
+            }
             STORAGE = SqliteStorage.load(SQLITE_FILE);
             STORAGE.cleanup();
         } catch (Exception e) {
@@ -44,8 +46,8 @@ public class StorageManager {
             throw new IllegalStateException("Storage has not been initialized.");
         }
         StorageClass loaded = SqliteStorage.load(SQLITE_FILE);
+        loaded.cleanup();
         STORAGE = loaded;
-        STORAGE.cleanup();
     }
 
     /// Saves the storage to the filesystem
@@ -64,7 +66,7 @@ public class StorageManager {
         }
 
         JsonObject root;
-        try (FileReader reader = new FileReader(file.toFile())) {
+        try (java.io.Reader reader = Files.newBufferedReader(file, java.nio.charset.StandardCharsets.UTF_8)) {
             JsonElement parsed = JsonParser.parseReader(reader);
             if (!parsed.isJsonObject()) {
                 throw new IllegalArgumentException(
@@ -86,8 +88,7 @@ public class StorageManager {
             while (iterator.hasNext()) {
                 JsonElement element = iterator.next();
                 if (!element.isJsonObject()) {
-                    iterator.remove();
-                    continue;
+                    throw new IllegalArgumentException("Invalid player entry in storage.json; import cancelled.");
                 }
 
                 JsonObject player = element.getAsJsonObject();
@@ -95,8 +96,7 @@ public class StorageManager {
                         ? player.get("UUID") : player.get("Player_UUID");
                 if (uuidElement == null || !uuidElement.isJsonPrimitive()
                         || uuidElement.getAsString().isBlank()) {
-                    iterator.remove();
-                    continue;
+                    throw new IllegalArgumentException("Missing player UUID in storage.json; import cancelled.");
                 }
 
                 player.remove("Player_UUID");
@@ -114,6 +114,10 @@ public class StorageManager {
         private int version = 1;
         private ArrayList<NamedLocation> Warps = new ArrayList<>();
         private ArrayList<Player> Players = new ArrayList<>();
+
+        public List<Player> getPlayers() { return Players == null ? List.of() : unmodifiableList(Players); }
+        void addLoadedPlayer(Player player) { Players.add(player); }
+        void addLoadedWarp(NamedLocation warp) { Warps.add(warp); }
 
         /**
          * Normalizes data loaded from JSON/SQLite without touching disk.
@@ -136,6 +140,7 @@ public class StorageManager {
 
         /// Cleans up any values in the storage class
         public void cleanup() throws Exception {
+            String before = GSON.toJson(this);
             normalize();
 
             // 删除无效 home（通过 Player 内部方法操作，避免 unmodifiableList 限制）
@@ -145,15 +150,13 @@ public class StorageManager {
                 }
             }
 
-            // 删除没有任何 home 的玩家
-            Players.removeIf(player -> player.getHomes().isEmpty());
-
             // Delete any warps with an invalid world_id (if enabled in config)
             if (ConfigManager.CONFIG.warp.isDeleteInvalid()) {
                 Warps.removeIf(warp -> warp.getWorld().isEmpty());
             }
 
-            StorageSaver();
+            normalize();
+            if (!before.equals(GSON.toJson(this))) SqliteStorage.save(SQLITE_FILE, this);
         }
 
         public int getVersion() {
@@ -162,7 +165,7 @@ public class StorageManager {
 
         // returns all warps
         public List<NamedLocation> getWarps() {
-            return unmodifiableList(Warps);
+            return Warps == null ? List.of() : unmodifiableList(Warps);
         }
 
         // filters the warpList and finds the one with the name (if there is one)
@@ -186,8 +189,8 @@ public class StorageManager {
             if (getWarp(warp.getName()).isPresent()) {
                 return true;
             } else {
+                SqliteStorage.addLocation(SQLITE_FILE, null, warp);
                 Warps.add(warp);
-                StorageSaver();
                 return false;
             }
         }
@@ -208,8 +211,9 @@ public class StorageManager {
 
         // Remove a warp, if the warp isn't found then nothing will happen
         public void removeWarp(NamedLocation warp) throws Exception {
+            if (!Warps.contains(warp)) throw new IllegalStateException("Warp no longer exists");
+            SqliteStorage.deleteLocation(SQLITE_FILE, null, warp.getName());
             Warps.remove(warp);
-            StorageSaver();
         }
     }
 }

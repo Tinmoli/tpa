@@ -3,6 +3,7 @@ package tpa.gui;
 import tpa.tpa;
 import tpa.tools;
 import tpa.Constants;
+import tpa.ConfigManager;
 import tpa.NamedLocation;
 import tpa.StorageManager;
 import eu.pb4.sgui.api.ClickType;
@@ -78,11 +79,14 @@ public class WarpsGui extends SimpleGui {
                     .addLoreLine(actionHint)
                     .addLoreLine(iconHint != null ? iconHint : Component.empty())
                     .setCallback(type -> {
-                        if (type == ClickType.MOUSE_LEFT_SHIFT && canModify) {
+                        if (!ConfigManager.CONFIG.warp.isEnabled()) { close(); return; }
+                        boolean allowed = player.createCommandSourceStack().permissions().hasPermission(
+                                net.minecraft.server.permissions.Permissions.COMMANDS_OWNER);
+                        if (type == ClickType.MOUSE_LEFT_SHIFT && allowed) {
                             close();
                             new IconPickerGui(player, warp, true, () ->
                                     new WarpsGui(player, new ArrayList<>(warps)).open()).open();
-                        } else if (type == ClickType.MOUSE_RIGHT_SHIFT && canModify) {
+                        } else if (type == ClickType.MOUSE_RIGHT_SHIFT && allowed) {
                             try {
                                 warp.setIcon("");
                                 sendPlayerMessage(player,
@@ -101,11 +105,12 @@ public class WarpsGui extends SimpleGui {
                                         warp.getX() + 0.5, warp.getY(), warp.getZ() + 0.5);
                                 Teleporter(player, w, pos);
                             });
-                        } else if (type == ClickType.MOUSE_RIGHT && canModify) {
+                        } else if (type == ClickType.MOUSE_RIGHT && allowed) {
                             try {
                                 StorageManager.STORAGE.removeWarp(warp);
                             } catch (Exception ex) {
                                 Constants.LOGGER.error("Error removing warp in GUI", ex);
+                                return;
                             }
                             sendPlayerMessage(player,
                                     getTranslatedText("commands.teleport_commands.warp.delete", player), true);
@@ -132,7 +137,7 @@ public class WarpsGui extends SimpleGui {
 
     private void fillNavBar() {
         for (int i = 45; i < 54; i++) {
-            setSlot(i, new GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE).hideTooltip().build());
+            setSlot(i, new GuiElementBuilder(GuiItems.background()).hideTooltip().build());
         }
         if (page > 0) {
             setSlot(45, new GuiElementBuilder(Items.ARROW)

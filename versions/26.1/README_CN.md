@@ -4,7 +4,7 @@
 
 一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back、/rtp 等
 
-当前版本：**1.0.5**
+当前版本：**1.0.6**
 
 项目地址：[https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 
@@ -14,14 +14,14 @@
 
 | 平台 | 支持版本 |
 |------|----------|
-| Fabric | 1.21.11、26.1、26.1.1、26.1.2、26.2 |
+| Fabric | 1.21.11、26.1、26.1.1、26.1.2、26.2、26.3 |
 
 > **注意**：从 v1.0.3 起，项目已转为纯 Fabric 模组，不再支持 NeoForge 和 Quilt。
 
 ## 依赖
 
 - Fabric Loader（使用各版本 JAR 所声明的最低版本）
-- Minecraft 1.21.11、26.1、26.1.1、26.1.2 或 26.2
+- Minecraft 1.21.11、26.1、26.1.1、26.1.2、26.2 或 26.3
 - Java 21（Minecraft 1.21.11）或 Java 25（Minecraft 26.x 系列）
 
 ## 目前可用的指令
@@ -111,8 +111,7 @@ rtp:
 - `Shift + 左键` Home：打开全部原版物品图标选择器
 - `Shift + 右键` Home：快速恢复默认床图标
 
-设置默认 Home 后，直接执行 `/home`（不填写名称）即可传送到该位置。默认 Home
-在 GUI 中以金色名称显示；没有自定义图标时使用黄色床图标。原有
+设置默认 Home 后，直接执行 `/home`（不填写名称）即可传送到该位置。设置默认 Home 不改变名称颜色或图标颜色。原有
 `/defaulthome <名称>` 命令仍可使用。
 
 图标选择器每页显示 45 个原版物品，并提供上一页、下一页、返回和恢复默认按钮。
@@ -137,11 +136,16 @@ rtp:
 
 ## SQLite 存储与旧数据导入
 
+从 1.0.6 起，玩家、Home 和 Warp 分表保存，日常操作只更新相关记录。旧版 SQLite 在首次启动时自动迁移，无需执行命令；迁移前自动生成 storage.db.pre-v2-*.bak，事务内写入并回读核对所有字段，失败时回滚并保留旧库。名称、坐标、维度、自定义图标、默认 Home 和列表顺序均保留。
+
+若不存在 storage.db 而存在 storage.json，首次启动会自动导入，源 JSON 保留；若已有数据库，则优先使用数据库，手动导入命令用于明确覆盖。回退旧版模组时，应停服并恢复迁移前备份，旧模组不能读取新表结构。
+
+
 模组现在固定使用 `config/tpa/storage.db` 作为运行时存储，不再提供
 JSON 运行时后端，也不再需要 `storage.backend` 配置。
 
-从旧版本升级时，请先备份数据，然后将旧 `storage.json` 放在
-`config/tpa/` 中，由 OP 执行：
+如果需要用旧 JSON 替换现有数据库中的数据，请将 `storage.json` 放在
+`config/tpa/` 中，由 OP 手动执行以下命令。普通 SQLite 升级无需执行：
 
 ```text
 /tpastorage json-to-sqlite
@@ -150,7 +154,7 @@ JSON 运行时后端，也不再需要 `storage.backend` 配置。
 导入成功后会自动执行与 `/tpareload` 相同的完整重载，新数据会立即载入，
 无需重启。命令不会删除源 JSON 文件；
 已有 `storage.db` 会先保存为带时间戳的备份。导入数据会先写入临时数据库并
-回读校验，校验成功后才替换正式数据库。确认数据无误后可自行归档或删除
+回读校验，校验成功后才通过事务更新正式数据库。确认数据无误后可自行归档或删除
 JSON 文件。为防止误覆盖，当 JSON 文件不存在或为空时，导入命令会拒绝执行。
 
 ## 语言文件
@@ -192,7 +196,7 @@ gradlew.bat buildAllVersions
 ./gradlew buildAllVersions
 ```
 
-该跨平台 Gradle 任务会构建全部五个独立版本，产物统一汇总到项目根目录的
+该跨平台 Gradle 任务会构建全部六个版本，产物统一汇总到项目根目录的
 `dist/`。
 
 如有问题欢迎提交 [Issue](https://github.com/Tinmoli/tpa/issues)
@@ -203,3 +207,7 @@ gradlew.bat buildAllVersions
 
 - [TeleportCommands](https://github.com/MrSn0wy/TeleportCommands) — 本项目的灵感来源与参考实现
 - [Dalict](https://github.com/Dalict) — 感谢贡献与支持
+
+## 开发结构
+
+所有版本共享根目录 fabric/src/main/java、fabric/src/main/resources 和 fabric/src/test/java。versions/ 仅保留各 Minecraft 版本的构建配置，不能单独复制版本目录进行构建。修改业务代码只需修改根目录，buildAllVersions 会对六个版本编译、测试并打包。构建使用 JDK 25；1.21.11 产物仍以 Java 21 为目标。

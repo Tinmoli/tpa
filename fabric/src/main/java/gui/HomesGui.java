@@ -59,10 +59,9 @@ public class HomesGui extends SimpleGui {
 
         for (int i = start; i < end; i++) {
             NamedLocation home = homes.get(i);
-            boolean isDefault = playerStorage != null && playerStorage.getDefaultHome().equals(home.getName());
 
             Component name = Component.literal(home.getName())
-                    .withStyle(isDefault ? ChatFormatting.GOLD : ChatFormatting.AQUA);
+                    .withStyle(ChatFormatting.AQUA);
             Component coords = Component.literal(String.format("X%d Y%d Z%d", home.getX(), home.getY(), home.getZ()))
                     .withStyle(ChatFormatting.GRAY);
             Component world = Component.literal(home.getWorldString())
@@ -75,7 +74,7 @@ public class HomesGui extends SimpleGui {
                     .withStyle(ChatFormatting.YELLOW);
 
             int slot = i - start;
-            Item displayIcon = resolveIcon(home, isDefault);
+            Item displayIcon = resolveIcon(home);
             setSlot(slot, new GuiElementBuilder(displayIcon)
                     .hideDefaultTooltip()
                     .setName(name)
@@ -85,6 +84,7 @@ public class HomesGui extends SimpleGui {
                     .addLoreLine(actionHint)
                     .addLoreLine(iconHint)
                     .setCallback(type -> {
+                        if (!ConfigManager.CONFIG.home.isEnabled()) { close(); return; }
                         if (type == ClickType.MOUSE_MIDDLE) {
                             if (playerStorage == null) {
                                 return;
@@ -151,6 +151,7 @@ public class HomesGui extends SimpleGui {
                                 }
                             } catch (Exception ex) {
                                 Constants.LOGGER.error("Error deleting home in GUI", ex);
+                                return;
                             }
                             sendPlayerMessage(player,
                                     getTranslatedText("commands.teleport_commands.home.delete", player), true);
@@ -165,7 +166,7 @@ public class HomesGui extends SimpleGui {
         fillNavBar();
     }
 
-    private Item resolveIcon(NamedLocation home, boolean isDefault) {
+    private Item resolveIcon(NamedLocation home) {
         String iconId = home.getIcon();
         if (!iconId.isBlank()) {
             Identifier id = Identifier.tryParse(iconId);
@@ -173,12 +174,12 @@ public class HomesGui extends SimpleGui {
                 return BuiltInRegistries.ITEM.getValue(id);
             }
         }
-        return isDefault ? Items.YELLOW_BED : Items.CYAN_BED;
+        return BuiltInRegistries.ITEM.getValue(Identifier.parse("minecraft:cyan_bed"));
     }
 
     private void fillNavBar() {
         for (int i = 45; i < 54; i++) {
-            setSlot(i, new GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE).hideTooltip().build());
+            setSlot(i, new GuiElementBuilder(GuiItems.background()).hideTooltip().build());
         }
         if (page > 0) {
             setSlot(45, new GuiElementBuilder(Items.ARROW)

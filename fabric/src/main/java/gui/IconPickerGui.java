@@ -84,7 +84,7 @@ public class IconPickerGui extends SimpleGui {
 
     private void fillNavigation() {
         for (int i = 45; i < 54; i++) {
-            setSlot(i, new GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE)
+            setSlot(i, new GuiElementBuilder(GuiItems.background())
                     .hideTooltip().build());
         }
 
@@ -126,6 +126,7 @@ public class IconPickerGui extends SimpleGui {
     }
 
     private void select(Item item) {
+        if (!canModify()) { close(); return; }
         try {
             location.setIcon(BuiltInRegistries.ITEM.getKey(item).toString());
             sendPlayerMessage(player, getTranslatedText(
@@ -140,6 +141,7 @@ public class IconPickerGui extends SimpleGui {
     }
 
     private void reset() {
+        if (!canModify()) { close(); return; }
         try {
             location.setIcon("");
             sendPlayerMessage(player, getTranslatedText(
@@ -156,5 +158,12 @@ public class IconPickerGui extends SimpleGui {
     private void goBack() {
         close();
         returnToParent.run();
+    }
+
+    private boolean canModify() {
+        return warp ? tpa.ConfigManager.CONFIG.warp.isEnabled()
+                && player.createCommandSourceStack().permissions().hasPermission(
+                        net.minecraft.server.permissions.Permissions.COMMANDS_OWNER)
+                : tpa.ConfigManager.CONFIG.home.isEnabled();
     }
 }

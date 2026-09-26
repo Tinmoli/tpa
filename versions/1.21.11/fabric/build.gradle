@@ -98,3 +98,5 @@ jar {
         rename { "${it}-${mod_id}" }
     }
 }
+
+apply from: rootProject.file('../../gradle/shared-sources.gradle')

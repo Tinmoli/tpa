@@ -4,7 +4,7 @@
 
 A Minecraft server-side mod that adds various teleportation-related commands, including /home, /tpa, /back, /rtp, and more.
 
-Current version: **1.0.5**
+Current version: **1.0.6**
 
 Project URL: [https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 
@@ -14,14 +14,14 @@ Project URL: [https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 
 | Platform | Supported Version |
 |----------|-------------------|
-| Fabric | 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 |
+| Fabric | 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2, 26.3 |
 
 > **Note**: Starting from v1.0.3, the project has transitioned to a Fabric-only mod. NeoForge and Quilt support has been removed.
 
 ## Dependencies
 
 - Fabric Loader (use the minimum version declared by each version-specific JAR)
-- Minecraft 1.21.11, 26.1, 26.1.1, 26.1.2, or 26.2
+- Minecraft 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2, or 26.3
 - Java 21 for Minecraft 1.21.11, or Java 25 for the Minecraft 26.x series
 
 ## Available Commands
@@ -112,8 +112,8 @@ In the `/homes` GUI:
 - `Shift + Right-click` a home to quickly restore the default bed icon
 
 After setting a default home, run `/home` without a name to teleport there. The
-default home has a gold name in the GUI and uses a yellow bed when it has no
-custom icon. The existing `/defaulthome <name>` command remains available.
+default selection does not change the name color or icon. Homes without a
+custom icon retain the cyan bed. The existing `/defaulthome <name>` command remains available.
 
 The picker displays 45 vanilla items per page and provides previous, next, back,
 and reset controls. Only items in the `minecraft` namespace are listed; items
@@ -139,11 +139,17 @@ settings cannot run afterward. Current `/back` death locations are preserved.
 
 ## SQLite Storage and Legacy Data Import
 
+Version 1.0.6 stores players, homes, and warps in separate tables; normal edits update only the affected records. Existing SQLite storage upgrades automatically on first startup, preserving names, coordinates, dimensions, icons, default homes, and ordering. A storage.db.pre-v2-*.bak backup is created before migration. Writes and read-back verification run in one transaction; failure rolls back and preserves the old database.
+
+If storage.db does not exist, an existing storage.json is imported automatically and retained. Existing SQLite takes precedence; the explicit import command replaces its data. To downgrade, stop the server and restore the pre-migration backup; older mods cannot read the new schema.
+
+
 The mod now always uses `config/tpa/storage.db` as its runtime storage. The JSON
 runtime backend and the `storage.backend` setting have been removed.
 
-When upgrading from an older version, back up your data, place the old
-`storage.json` in `config/tpa/`, and run this command as an operator:
+To explicitly replace an existing database with legacy JSON data, place
+`storage.json` in `config/tpa/` and run this command as an operator.
+Normal SQLite upgrades do not require this command:
 
 ```text
 /tpastorage json-to-sqlite
@@ -153,7 +159,7 @@ A successful import automatically performs the same complete reload as
 `/tpareload`, so imported data is loaded immediately without a restart. The source JSON file is
 not deleted, and an existing `storage.db` is retained as a timestamped backup.
 Data is first written to a temporary database and read back for verification;
-the live database is replaced only after verification succeeds. Archive or
+the live database is updated transactionally only after verification succeeds. Archive or
 remove the JSON after checking the import. The command refuses to run when the
 JSON file is missing or empty.
 
@@ -197,7 +203,7 @@ gradlew.bat buildAllVersions
 ./gradlew buildAllVersions
 ```
 
-This cross-platform Gradle task builds all five independent projects and
+This cross-platform Gradle task builds all six version projects and
 collects the resulting JARs in the root `dist/` directory.
 
 If you encounter any issues, please submit an [Issue](https://github.com/Tinmoli/tpa/issues)
@@ -208,3 +214,7 @@ If you encounter any issues, please submit an [Issue](https://github.com/Tinmoli
 
 - [TeleportCommands](https://github.com/MrSn0wy/TeleportCommands) — Inspiration and reference implementation
 - [Dalict](https://github.com/Dalict) — Contributions and support
+
+## Development layout
+
+All versions share the root fabric/src/main/java, fabric/src/main/resources, and fabric/src/test/java directories. The versions/ directories contain build configuration only and require the full checkout. buildAllVersions compiles, tests, and packages all six versions. Builds require JDK 25; the 1.21.11 artifact still targets Java 21.

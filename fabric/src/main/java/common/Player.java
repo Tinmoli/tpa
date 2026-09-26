@@ -16,6 +16,26 @@ public class Player {
         this.UUID = uuid;
     }
 
+    static Player loaded(String uuid, String defaultHome) {
+        Player player = new Player(uuid);
+        player.DefaultHome = defaultHome;
+        return player;
+    }
+
+    void addLoadedHome(NamedLocation home) {
+        home.bindOwner(this);
+        Homes.add(home);
+    }
+
+    void renamedHome(String oldName, String newName) {
+        if (DefaultHome.equals(oldName)) DefaultHome = newName;
+    }
+
+    private void requireCurrent() {
+        if (StorageManager.STORAGE.getPlayer(UUID).orElse(null) != this)
+            throw new IllegalStateException("This menu is out of date; please reopen it");
+    }
+
     // -----
 
     public String getUUID() {
@@ -28,7 +48,7 @@ public class Player {
 
     // returns all homes
     public List<NamedLocation> getHomes() {
-        return unmodifiableList(Homes);
+        return Homes == null ? List.of() : unmodifiableList(Homes);
     }
 
     boolean normalizeForStorage() {
@@ -43,6 +63,7 @@ public class Player {
         }
         Homes.removeIf(home -> home == null || !home.isStructurallyValid());
         Homes.forEach(NamedLocation::normalizeForStorage);
+        Homes.forEach(home -> home.bindOwner(this));
         if (!DefaultHome.isEmpty() && getHome(DefaultHome).isEmpty()) {
             DefaultHome = "";
         }
@@ -51,7 +72,7 @@ public class Player {
 
     // returns a specific home based on the name (if there is one)
     public Optional<NamedLocation> getHome(String name)  {
-        return Homes.stream()
+        return getHomes().stream()
                 .filter( home -> Objects.equals( home.getName(), name ))
                 .findFirst();
     }
@@ -59,19 +80,23 @@ public class Player {
     // -----
 
     public void setDefaultHome(String defaultHome) throws Exception {
+        requireCurrent();
+        if (!defaultHome.isEmpty() && getHome(defaultHome).isEmpty())
+            throw new IllegalArgumentException("Default home does not exist");
+        SqliteStorage.setDefaultHome(StorageManager.SQLITE_FILE, UUID, defaultHome);
         this.DefaultHome = defaultHome;
-        StorageManager.StorageSaver();
     }
 
     // Adds a NamedLocation to the home list, returns true if it already exists
     public boolean addHome(NamedLocation home) throws Exception {
+        requireCurrent();
         if (getHome(home.getName()).isPresent()) {
             // Home with same name found!
             return true;
 
         } else {
-            Homes.add(home);
-            StorageManager.StorageSaver();
+            SqliteStorage.addLocation(StorageManager.SQLITE_FILE, this, home);
+            addLoadedHome(home);
             return false;
         }
     }
@@ -79,8 +104,11 @@ public class Player {
     // -----
 
     public void deleteHome(NamedLocation home) throws Exception {
+        requireCurrent();
+        if (!Homes.contains(home)) throw new IllegalStateException("Home no longer exists");
+        SqliteStorage.deleteLocation(StorageManager.SQLITE_FILE, UUID, home.getName());
         Homes.remove(home);
-        StorageManager.StorageSaver();
+        if (DefaultHome.equals(home.getName())) DefaultHome = "";
     }
 
     // 批量删除满足条件的 home（供 cleanup 使用，避免 unmodifiableList 限制）

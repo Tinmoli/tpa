@@ -147,6 +147,26 @@ public class tools {
         }
     }
 
+    /** Surface search, or a floor below the roof in ceiling dimensions. */
+    public static Optional<BlockPos> getRandomSafeBlockPos(int x, int z, ServerLevel world) {
+        BlockPos column = new BlockPos(x, world.getMinY() + 1, z);
+        if (!world.getWorldBorder().isWithinBounds(column)) return Optional.empty();
+        int highest = world.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        if (world.dimensionType().hasCeiling()) {
+            highest = Math.min(highest, world.getMinY() + world.dimensionType().logicalHeight() - 2);
+        }
+        highest = Math.min(highest, world.getMaxY() - 1);
+        for (int y = highest; y > world.getMinY(); y--) {
+            BlockPos candidate = new BlockPos(x, y, z);
+            if (isBlockPosSafe(candidate, world)
+                    && world.getFluidState(candidate).isEmpty()
+                    && world.getFluidState(candidate.below()).isEmpty()) return Optional.of(candidate);
+            // Open dimensions use the surface only, never a cave beneath lava/ocean.
+            if (!world.dimensionType().hasCeiling()) break;
+        }
+        return Optional.empty();
+    }
+
     /**
      * Gets translated text for a key.
      * Reads from config/tpa/lang/ with in-memory caching to avoid repeated disk I/O.
@@ -231,6 +251,9 @@ public class tools {
 
     // checks if a BlockPos is safe, used by the teleportSafetyChecker.
     private static boolean isBlockPosSafe(BlockPos bottomPlayer, ServerLevel world) {
+        if (!world.getWorldBorder().isWithinBounds(bottomPlayer)
+                || world.isOutsideBuildHeight(bottomPlayer.below())
+                || world.isOutsideBuildHeight(bottomPlayer.above())) return false;
         BlockPos belowPlayer = new BlockPos(bottomPlayer.getX(), bottomPlayer.getY() - 1, bottomPlayer.getZ());
         String belowPlayerId = world.getBlockState(belowPlayer).getBlock().getDescriptionId();
 
@@ -239,8 +262,11 @@ public class tools {
         BlockPos TopPlayer = new BlockPos(bottomPlayer.getX(), bottomPlayer.getY() + 1, bottomPlayer.getZ());
         String TopPlayerId = world.getBlockState(TopPlayer).getBlock().getDescriptionId();
 
-        return (belowPlayerId.equals("block.minecraft.water") || !world.getBlockState(belowPlayer).getCollisionShape(world, belowPlayer).isEmpty())
+        return !unsafeCollisionFreeBlocks.contains(belowPlayerId)
+                && !Set.of("block.minecraft.magma_block", "block.minecraft.cactus", "block.minecraft.campfire", "block.minecraft.soul_campfire").contains(belowPlayerId)
+                && (belowPlayerId.equals("block.minecraft.water") || world.getBlockState(belowPlayer).isFaceSturdy(world, belowPlayer, net.minecraft.core.Direction.UP))
                 && (world.getBlockState(bottomPlayer).getCollisionShape(world, bottomPlayer).isEmpty() && !unsafeCollisionFreeBlocks.contains(BottomPlayerId))
+                && world.getBlockState(TopPlayer).getCollisionShape(world, TopPlayer).isEmpty()
                 && (!unsafeCollisionFreeBlocks.contains(TopPlayerId));
     }
 }

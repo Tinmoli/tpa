@@ -62,7 +62,7 @@ public class TpaGui extends SimpleGui {
 
     private void fillNavBar() {
         for (int i = 45; i < 54; i++) {
-            setSlot(i, new GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE).hideTooltip().build());
+            setSlot(i, new GuiElementBuilder(GuiItems.background()).hideTooltip().build());
         }
         if (page > 0) {
             setSlot(45, new GuiElementBuilder(Items.ARROW)

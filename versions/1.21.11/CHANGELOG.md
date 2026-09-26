@@ -1,5 +1,19 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
+
+---
+
+## [1.0.6] - 2026-09-26
+
+- Store players, homes and warps in relational SQLite tables; normal edits write only affected records.
+- Automatically back up, migrate and verify legacy SQLite in a transaction; automatically import legacy JSON on first startup when no database exists.
+- Update default homes atomically during rename/deletion; failed writes preserve memory and stale menus cannot edit reloaded objects.
+- Share implementation and regression tests across six versions, including the Warp enabled check previously missing from release sources.
+- Check headroom for safe destinations; use terrain height, world borders and ceiling limits for RTP, with annular sampling.
+- Setting the default home preserves its name and icon colors. Teleport particle effects are retained.
+- Add Minecraft 26.3 with SGUI 2.2.0+26.3; upgrade Gradle to 9.6.0 and Loom to 1.17.3.
+- Add migration regression tests and a six-version CI build matrix.
 
 ---
 

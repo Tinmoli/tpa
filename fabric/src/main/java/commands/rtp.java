@@ -54,11 +54,12 @@ public class rtp {
         Optional<BlockPos> safePos = Optional.empty();
         for (int attempt = 0; attempt < 10 && safePos.isEmpty(); attempt++) {
             ThreadLocalRandom rng = ThreadLocalRandom.current();
-            int randomX = rng.nextInt(maxRange - minRange + 1) + minRange;
-            int randomZ = rng.nextInt(maxRange - minRange + 1) + minRange;
-            if (rng.nextBoolean()) randomX = -randomX;
-            if (rng.nextBoolean()) randomZ = -randomZ;
-            safePos = getSafeBlockPos(new BlockPos(randomX, 64, randomZ), targetWorld);
+            double angle = rng.nextDouble() * Math.PI * 2;
+            double radius = Math.sqrt((double) minRange * minRange
+                    + rng.nextDouble() * ((double) maxRange * maxRange - (double) minRange * minRange));
+            int randomX = (int) Math.round(Math.cos(angle) * radius);
+            int randomZ = (int) Math.round(Math.sin(angle) * radius);
+            safePos = getRandomSafeBlockPos(randomX, randomZ, targetWorld);
         }
 
         if (safePos.isEmpty()) {
