@@ -1,0 +1,51 @@
+package tpa.teleport;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+
+import tpa.TpaMod;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.StreamSupport;
+
+public class DeathLocation {
+    private BlockPos pos;
+    private String world;
+
+    public DeathLocation(BlockPos pos, String world) {
+        this.pos = pos;
+        this.world = world;
+    }
+
+    public BlockPos getBlockPos() {
+        return pos;
+    }
+
+    // maybe add getX getY and getZ? todo!
+
+    public String getWorldString() {
+        return world;
+    }
+
+    // function to quickly filter the worlds and get the ServerLevel for the string
+    public Optional<ServerLevel> getWorld() {
+        return StreamSupport.stream(TpaMod.SERVER.getAllLevels().spliterator(), false)
+                .filter(
+                        level ->
+                                Objects.equals(
+                                        level.dimension().identifier().toString(), this.world))
+                .findFirst();
+    }
+
+    // ----- note to self: these don't need to be saved since this class isn't a part of the storage
+    // :3
+
+    public void setBlockPos(BlockPos pos) {
+        this.pos = pos;
+    }
+
+    public void setWorld(String world) {
+        this.world = world;
+    }
+}

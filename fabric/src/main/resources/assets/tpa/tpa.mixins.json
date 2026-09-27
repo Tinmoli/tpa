@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "tpa.mixin",
+  "refmap": "assets/tpa/tpa.refmap.json",
+  "compatibilityLevel": "JAVA_${java_version}",
+  "mixins": [
+    "ServerStartMixin",
+    "PlayerDeathMixin",
+    "CommandsMixin",
+    "RtpChunkAccess",
+    "RtpTickMixin",
+    "RtpProtectionMixin"
+  ],
+  "client": [],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -55,7 +55,7 @@ tasks.withType(JavaCompile).configureEach {
 loom {
     mixin {
         useLegacyMixinAp = true
-        defaultRefmapName.set("${mod_id}.refmap.json")
+        defaultRefmapName.set("assets/tpa/tpa.refmap.json")
     }
 }
 
@@ -80,7 +80,7 @@ processResources {
         key, value -> [(key): value instanceof String ? value.replace("\n", "\\\\n") : value]
     }
 
-    filesMatching(['pack.mcmeta', 'fabric.mod.json', '*.mixins.json']) {
+    filesMatching(['pack.mcmeta', 'fabric.mod.json', '**/*.mixins.json']) {
         expand jsonExpandProps
     }
 

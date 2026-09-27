@@ -1,4 +1,4 @@
-# tpa <img alt="tpa Logo" src="https://github.com/Tinmoli/Tpa/fabric/src/main/resources/tpa.png" width="30"/>
+# tpa <img alt="tpa Logo" src="../../fabric/src/main/resources/assets/tpa/icon.png" width="30"/>
 
 > **[中文文档](https://github.com/Tinmoli/tpa/blob/main/README_CN.md)** | Click here for Chinese documentation
 
@@ -261,4 +261,8 @@ If you encounter any issues, please submit an [Issue](https://github.com/Tinmoli
 
 ## Development layout
 
-All versions share the root fabric/src/main/java, fabric/src/main/resources, and fabric/src/test/java directories. The versions/ directories contain build configuration only and require the full checkout. buildAllVersions compiles, tests, and packages all six versions. Builds require JDK 25; the 1.21.11 artifact still targets Java 21.
+All versions share `fabric/src/main/java` and `fabric/src/main/resources`. The `versions/` directories contain build configuration and require the full checkout. `buildAllVersions` compiles and packages all six versions. Builds require JDK 25; the 1.21.11 artifact targets Java 21.
+
+Java sources live under `tpa`, with separate `command`, `config`, `storage`, `teleport`, `rtp`, `language`, `gui`, `suggestion`, `mixin` and `util` packages. Class names use PascalCase; methods and variables use camelCase. Use four-space indentation and a blank line between logical sections.
+
+Bundled resources live under `assets/tpa/`, including the icon, languages and mixin configuration. Fabric requires `fabric.mod.json` at the resource root. Runtime settings and player data remain under `config/tpa/`.

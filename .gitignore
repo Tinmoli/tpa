@@ -29,7 +29,7 @@ gradle-*-bin.zip
 # Runtime/server files
 run/
 logs/
-config/
+/config/
 *.log
 
 # OS files

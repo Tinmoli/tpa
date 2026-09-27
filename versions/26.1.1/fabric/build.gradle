@@ -50,7 +50,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/${mod_id}.accesswidener")
+    accessWidenerPath = file("src/main/resources/assets/tpa/tpa.accesswidener")
 }
 
 processResources {
@@ -74,7 +74,7 @@ processResources {
         key, value -> [(key): value instanceof String ? value.replace("\n", "\\\\n") : value]
     }
 
-    filesMatching(['pack.mcmeta', 'fabric.mod.json', '*.mixins.json']) {
+    filesMatching(['pack.mcmeta', 'fabric.mod.json', '**/*.mixins.json']) {
         expand jsonExpandProps
     }
 

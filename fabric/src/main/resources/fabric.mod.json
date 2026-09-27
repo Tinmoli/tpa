@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "id": "${mod_id}",
+    "id": "tpa",
     "version": "${version}",
     "name": "${mod_name}",
     "description": "${description}",
@@ -13,20 +13,20 @@
         "issues": "https://github.com/Tinmoli/tpa/issues"
     },
     "license": "${license}",
-    "icon": "${mod_id}.png",
+    "icon": "assets/tpa/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
-            "tpa.fabricInit"
+            "tpa.TpaInitializer"
         ]
     },
     "mixins": [
-        "${mod_id}.mixins.json"
+        "assets/tpa/tpa.mixins.json"
     ],
     "custom": {
         "modmenu": {
             "links": {
-                "modmenu.modrinth": "https://modrinth.com/mod/tinmolitpa"
+                "modmenu.modrinth": "http://modrinth.com/mod/tpa-tinmoli"
             }
         }
     },

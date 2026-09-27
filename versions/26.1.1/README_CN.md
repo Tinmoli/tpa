@@ -1,4 +1,4 @@
-# tpa <img alt="tpa Logo" src="https://github.com/Tinmoli/Tpa/fabric/src/main/resources/tpa.png" width="30"/>
+# tpa <img alt="tpa Logo" src="../../fabric/src/main/resources/assets/tpa/icon.png" width="30"/>
 
 > **[English Documentation](https://github.com/Tinmoli/tpa/blob/main/README.md)** | 点击这里查看英文文档
 
@@ -254,4 +254,8 @@ gradlew.bat buildAllVersions
 
 ## 开发结构
 
-所有版本共享根目录 fabric/src/main/java、fabric/src/main/resources 和 fabric/src/test/java。versions/ 仅保留各 Minecraft 版本的构建配置，不能单独复制版本目录进行构建。修改业务代码只需修改根目录，buildAllVersions 会对六个版本编译、测试并打包。构建使用 JDK 25；1.21.11 产物仍以 Java 21 为目标。
+所有版本共享 `fabric/src/main/java` 和 `fabric/src/main/resources`。`versions/` 保留各 Minecraft 版本的构建配置，构建时需要完整项目。修改业务代码只需修改根目录，`buildAllVersions` 会编译并打包六个版本。构建使用 JDK 25；1.21.11 产物以 Java 21 为目标。
+
+Java 源码统一位于 `tpa` 包下，按职责分为 `command`（命令）、`config`（配置）、`storage`（存储）、`teleport`（传送）、`rtp`（随机传送）、`language`（语言）、`gui`（界面）、`suggestion`（命令补全）、`mixin`（游戏接口接入）和 `util`（通用辅助）。类名使用大驼峰，方法及变量使用小驼峰，缩进为四个空格，逻辑段之间空一行。
+
+内置图标、语言和 Mixin 配置等资源放在 `assets/tpa/`。Fabric 要求的 `fabric.mod.json` 保留在资源根目录。运行时的配置与玩家数据仍位于 `config/tpa/`。

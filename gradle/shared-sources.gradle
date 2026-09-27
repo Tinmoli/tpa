@@ -6,15 +6,7 @@ sourceSets {
         java.setSrcDirs([new File(repositoryRoot, 'fabric/src/main/java')])
         resources.setSrcDirs([new File(repositoryRoot, 'fabric/src/main/resources')])
     }
-    test.java.setSrcDirs([new File(repositoryRoot, 'fabric/src/test/java')])
-}
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
-}
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
 }
 if (project.minecraft_version != '1.21.11') {
-    loom.accessWidenerPath = new File(repositoryRoot, 'fabric/src/main/resources/tpa.accesswidener')
+    loom.accessWidenerPath = new File(repositoryRoot, 'fabric/src/main/resources/assets/tpa/tpa.accesswidener')
 }

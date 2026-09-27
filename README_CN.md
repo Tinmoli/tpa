@@ -1,4 +1,4 @@
-# tpa <img alt="tpa Logo" src="https://github.com/Tinmoli/Tpa/fabric/src/main/resources/tpa.png" width="30"/>
+# tpa <img alt="tpa Logo" src="fabric/src/main/resources/assets/tpa/icon.png" width="30"/>
 
 > **[English Documentation](https://github.com/Tinmoli/tpa/blob/main/README.md)** | 点击这里查看英文文档
 
@@ -254,4 +254,4 @@ gradlew.bat buildAllVersions
 
 ## 开发结构
 
-所有版本共享根目录 fabric/src/main/java、fabric/src/main/resources 和 fabric/src/test/java。versions/ 仅保留各 Minecraft 版本的构建配置，不能单独复制版本目录进行构建。修改业务代码只需修改根目录，buildAllVersions 会对六个版本编译、测试并打包。构建使用 JDK 25；1.21.11 产物仍以 Java 21 为目标。
+所有版本共享 `fabric/src/main/java` 和 `fabric/src/main/resources`。`versions/` 保留各 Minecraft 版本的构建配置，构建时需要完整项目。修改业务代码只需修改根目录，`buildAllVersions` 会编译并打包六个版本。构建使用 JDK 25；1.21.11 产物以 Java 21 为目标。

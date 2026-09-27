@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.7] - 2026-09-27
 
+- Reorganize Java packages and file names, separate configuration/storage models and split language, messaging and teleport helpers into focused classes. Normalize naming, imports and formatting without changing gameplay or storage schemas.
+- Preserve legacy JSON field names explicitly after renaming Java fields. Move bundled resources under `assets/tpa/`, use the literal mod ID in Fabric metadata and relative README logo paths.
+
 - Keep configuration comments focused on purpose, units and allowed values; refresh known generated RTP comments without changing values or other custom notes.
 - Place RTP usage and the complete configuration example in the README configuration section; keep change and migration history in the changelog.
 
