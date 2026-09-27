@@ -89,6 +89,9 @@ public class ConfigManager {
         rtp.put("enabled", cfg.rtp.enabled);
         rtp.put("minRange", cfg.rtp.minRange);
         rtp.put("maxRange", cfg.rtp.maxRange);
+        rtp.put("cooldownEnabled", cfg.rtp.cooldownEnabled);
+        rtp.put("cooldownSeconds", cfg.rtp.cooldownSeconds);
+        rtp.put("maxConcurrentLoads", cfg.rtp.maxConcurrentLoads);
         root.put("rtp", rtp);
         Files.createDirectories(CONFIG_FILE.getParent());
         StringWriter sw = new StringWriter();
@@ -122,6 +125,9 @@ public class ConfigManager {
             {"  world_id:",            "  # 出生点所在世界的 ID，默认为主世界"},
             {"  minRange:",            "  # 随机传送最小范围（方块）"},
             {"  maxRange:",            "  # 随机传送最大范围（方块）"},
+            {"  cooldownEnabled:",     "  # 是否启用 RTP 请求冷却"},
+            {"  cooldownSeconds:",     "  # RTP 请求冷却秒数，0 表示不冷却"},
+            {"  maxConcurrentLoads:",  "  # 全服 RTP 区块加载并发上限（1-8），默认 1；提高会增加内存压力"},
         };
         StringBuilder sb = new StringBuilder();
         for (String line : yaml.split("\n", -1)) {
@@ -156,7 +162,7 @@ public class ConfigManager {
                     || !hasKeys(data, "spawn",
                             "enabled", "world_id")
                     || !hasKeys(data, "rtp",
-                            "enabled", "minRange", "maxRange");
+                            "enabled", "minRange", "maxRange", "cooldownEnabled", "cooldownSeconds", "maxConcurrentLoads");
         }
     }
 
@@ -212,6 +218,9 @@ public class ConfigManager {
             if (r.containsKey("enabled"))  cfg.rtp.enabled  = (boolean) r.get("enabled");
             if (r.containsKey("minRange")) cfg.rtp.minRange = (int)     r.get("minRange");
             if (r.containsKey("maxRange")) cfg.rtp.maxRange = (int)     r.get("maxRange");
+            if (r.containsKey("cooldownEnabled")) cfg.rtp.cooldownEnabled = (boolean) r.get("cooldownEnabled");
+            if (r.containsKey("cooldownSeconds")) cfg.rtp.cooldownSeconds = Math.max(0, ((Number) r.get("cooldownSeconds")).intValue());
+            if (r.containsKey("maxConcurrentLoads")) cfg.rtp.maxConcurrentLoads = Math.max(1, Math.min(8, ((Number) r.get("maxConcurrentLoads")).intValue()));
         }
         if (cfg.language == null || cfg.language.isBlank()) {
             Constants.LOGGER.warn("language cannot be empty; using zh_cn.");
@@ -321,6 +330,9 @@ public class ConfigManager {
             public boolean enabled = true;
             public int minRange = 1000;
             public int maxRange = 2000;
+            public boolean cooldownEnabled = true;
+            public int cooldownSeconds = 30;
+            public int maxConcurrentLoads = 1;
             public boolean isEnabled()   { return enabled; }
             public int     getMinRange() { return minRange; }
             public int     getMaxRange() { return maxRange; }

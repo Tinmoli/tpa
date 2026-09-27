@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.7] - 2026-09-27
+
+- RTP immediately acknowledges searches and teleports when safe, without a fixed countdown; add configurable request cooldown and global chunk-load concurrency limit (default 1).
+
+
+- Replace synchronous RTP chunk generation with nonblocking requests polled on server ticks.
+- Cache a small per-dimension pool with safety revalidation, bounded concurrency, queues, retries and refill rates; pause new loads during lag.
+- Immediately acknowledge commands and add localized pending, cooldown, busy, timeout and cancellation messages.
+- Clear state on reload/shutdown and cancel requests on disconnect, death or dimension change; drain old generation before starting another.
+- Verify nonblocking chunk entry points and lifecycle mixin targets across six game versions.
+
+
+- Load RTP target chunks before reading terrain height; check head fluids and keep Nether searches below the roof.
+- Add a compass selection mode for default Homes in vanilla survival, retaining supported middle-click behavior and existing name/icon colors.
+- Require confirmation before deleting a Home, with name and coordinate preview and a cancel button.
+- Add regression coverage for terrain searches, default Home persistence, player UUID isolation and menu item registration across six supported versions.
+
+---
+
 ## [1.0.6] - 2026-09-26
 
 - Store players, homes and warps in relational SQLite tables; normal edits write only affected records.

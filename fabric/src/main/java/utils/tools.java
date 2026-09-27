@@ -149,22 +149,26 @@ public class tools {
 
     /** Surface search, or a floor below the roof in ceiling dimensions. */
     public static Optional<BlockPos> getRandomSafeBlockPos(int x, int z, ServerLevel world) {
+        if (world.getChunkSource().getChunkNow(x >> 4, z >> 4) == null) return Optional.empty();
         BlockPos column = new BlockPos(x, world.getMinY() + 1, z);
         if (!world.getWorldBorder().isWithinBounds(column)) return Optional.empty();
-        int highest = world.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        if (world.dimensionType().hasCeiling()) {
-            highest = Math.min(highest, world.getMinY() + world.dimensionType().logicalHeight() - 2);
-        }
-        highest = Math.min(highest, world.getMaxY() - 1);
-        for (int y = highest; y > world.getMinY(); y--) {
-            BlockPos candidate = new BlockPos(x, y, z);
-            if (isBlockPosSafe(candidate, world)
-                    && world.getFluidState(candidate).isEmpty()
-                    && world.getFluidState(candidate.below()).isEmpty()) return Optional.of(candidate);
-            // Open dimensions use the surface only, never a cave beneath lava/ocean.
-            if (!world.dimensionType().hasCeiling()) break;
-        }
-        return Optional.empty();
+        java.util.OptionalInt height = RtpColumnSearch.find(new RtpColumnSearch.Column() {
+            @Override public void load() {
+                // The RTP scheduler has already completed asynchronous loading.
+            }
+            @Override public int surfaceY() {
+                return world.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, x, z);
+            }
+            @Override public boolean isSafe(int y) {
+                BlockPos candidate = new BlockPos(x, y, z);
+                return isBlockPosSafe(candidate, world)
+                        && world.getFluidState(candidate).isEmpty()
+                        && world.getFluidState(candidate.above()).isEmpty()
+                        && world.getFluidState(candidate.below()).isEmpty();
+            }
+        }, world.getMinY(), world.getMaxY(), world.dimensionType().hasCeiling(),
+                world.dimensionType().logicalHeight());
+        return height.isPresent() ? Optional.of(new BlockPos(x, height.getAsInt(), z)) : Optional.empty();
     }
 
     /**

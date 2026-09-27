@@ -32,6 +32,7 @@ public class HomesGui extends SimpleGui {
     private List<NamedLocation> homes;
     private final Player playerStorage;
     private int page = 0;
+    private boolean choosingDefault;
     private static final int PAGE_SIZE = 36;
 
     public HomesGui(ServerPlayer player, Player playerStorage, List<NamedLocation> homes) {
@@ -50,9 +51,13 @@ public class HomesGui extends SimpleGui {
                 Component.literal(String.valueOf(current)),
                 Component.literal(String.valueOf(max)))
                 .withStyle(ChatFormatting.YELLOW));
+        if (choosingDefault) {
+            setTitle(getTranslatedText("gui.teleport_commands.homes.choose_default_title", player));
+        }
     }
 
     private void build() {
+        updateTitle();
         for (int i = 0; i < getSize(); i++) clearSlot(i);
         int start = page * PAGE_SIZE;
         int end = Math.min(start + PAGE_SIZE, homes.size());
@@ -67,7 +72,8 @@ public class HomesGui extends SimpleGui {
             Component world = Component.literal(home.getWorldString())
                     .withStyle(ChatFormatting.DARK_GRAY);
             Component actionHint = getTranslatedText(
-                    "gui.teleport_commands.homes.hint_actions", player)
+                    choosingDefault ? "gui.teleport_commands.homes.choose_default_hint"
+                            : "gui.teleport_commands.homes.hint_actions_v2", player)
                     .withStyle(ChatFormatting.YELLOW);
             Component iconHint = getTranslatedText(
                     "gui.teleport_commands.homes.hint_icons", player)
@@ -80,24 +86,30 @@ public class HomesGui extends SimpleGui {
                     .setName(name)
                     .addLoreLine(coords)
                     .addLoreLine(world)
+                    .addLoreLine(playerStorage != null && playerStorage.getDefaultHome().equals(home.getName())
+                            ? getTranslatedText("commands.teleport_commands.common.default", player).withStyle(ChatFormatting.GRAY)
+                            : Component.empty())
                     .addLoreLine(Component.empty())
                     .addLoreLine(actionHint)
                     .addLoreLine(iconHint)
                     .setCallback(type -> {
                         if (!ConfigManager.CONFIG.home.isEnabled()) { close(); return; }
-                        if (type == ClickType.MOUSE_MIDDLE) {
+                        if (type == ClickType.MOUSE_MIDDLE || choosingDefault && type == ClickType.MOUSE_LEFT) {
                             if (playerStorage == null) {
                                 return;
                             }
                             if (playerStorage.getDefaultHome().equals(home.getName())) {
+                                choosingDefault = false;
                                 sendPlayerMessage(player,
                                         getTranslatedText(
                                                 "commands.teleport_commands.home.defaultSame",
                                                 player).withStyle(ChatFormatting.AQUA), true);
+                                build();
                                 return;
                             }
                             try {
                                 playerStorage.setDefaultHome(home.getName());
+                                choosingDefault = false;
                                 sendPlayerMessage(player,
                                         getTranslatedText(
                                                 "commands.teleport_commands.home.default",
@@ -111,6 +123,9 @@ public class HomesGui extends SimpleGui {
                                                 "commands.teleport_commands.home.error",
                                                 player).withStyle(ChatFormatting.RED), true);
                             }
+                        } else if (choosingDefault) {
+                            // Selection mode must never delete homes or open another editor.
+                            return;
                         } else if (type == ClickType.MOUSE_LEFT_SHIFT) {
                             close();
                             new IconPickerGui(player, home, false, () ->
@@ -142,28 +157,44 @@ public class HomesGui extends SimpleGui {
                                 }
                             });
                         } else if (type == ClickType.MOUSE_RIGHT) {
-                            try {
-                                if (playerStorage != null) {
-                                    playerStorage.deleteHome(home);
-                                    if (playerStorage.getDefaultHome().equals(home.getName())) {
-                                        playerStorage.setDefaultHome("");
-                                    }
-                                }
-                            } catch (Exception ex) {
-                                Constants.LOGGER.error("Error deleting home in GUI", ex);
-                                return;
-                            }
-                            sendPlayerMessage(player,
-                                    getTranslatedText("commands.teleport_commands.home.delete", player), true);
-                            homes.remove(home);
-                            if (page > 0 && page * PAGE_SIZE >= homes.size()) page--;
-                            updateTitle();
-                            build();
+                            confirmDelete(home);
                         }
                     }).build());
         }
 
         fillNavBar();
+    }
+
+    private void confirmDelete(NamedLocation home) {
+        for (int i = 0; i < getSize(); i++) clearSlot(i);
+        setTitle(getTranslatedText("gui.teleport_commands.homes.delete_title", player));
+        setSlot(13, new GuiElementBuilder(resolveIcon(home))
+                .setName(Component.literal(home.getName()))
+                .addLoreLine(Component.literal(home.getWorldString()))
+                .addLoreLine(Component.literal(String.format("X%d Y%d Z%d", home.getX(), home.getY(), home.getZ())))
+                .build());
+        setSlot(30, new GuiElementBuilder(Items.EMERALD)
+                .setName(getTranslatedText("gui.teleport_commands.homes.delete_confirm", player))
+                .setCallback(type -> {
+                    if (type != ClickType.MOUSE_LEFT || playerStorage == null) return;
+                    if (!ConfigManager.CONFIG.home.isEnabled()) { close(); return; }
+                    try {
+                        playerStorage.deleteHome(home);
+                    } catch (Exception ex) {
+                        Constants.LOGGER.error("Error deleting home in GUI", ex);
+                        sendPlayerMessage(player, getTranslatedText("commands.teleport_commands.home.error", player)
+                                .withStyle(ChatFormatting.RED), true);
+                        build();
+                        return;
+                    }
+                    sendPlayerMessage(player, getTranslatedText("commands.teleport_commands.home.delete", player), true);
+                    homes.remove(home);
+                    if (page > 0 && page * PAGE_SIZE >= homes.size()) page--;
+                    build();
+                }).build());
+        setSlot(32, new GuiElementBuilder(Items.BARRIER)
+                .setName(getTranslatedText("gui.teleport_commands.homes.delete_cancel", player))
+                .setCallback(type -> { if (type == ClickType.MOUSE_LEFT) build(); }).build());
     }
 
     private Item resolveIcon(NamedLocation home) {
@@ -186,6 +217,17 @@ public class HomesGui extends SimpleGui {
                     .setName(getTranslatedText("gui.teleport_commands.common.prev_page", player).withStyle(ChatFormatting.WHITE))
                     .setCallback(() -> { page--; build(); }).build());
         }
+        setSlot(48, new GuiElementBuilder(Items.COMPASS)
+                .setName(getTranslatedText(choosingDefault
+                        ? "gui.teleport_commands.homes.cancel_default"
+                        : "gui.teleport_commands.homes.set_default", player))
+                .addLoreLine(getTranslatedText("gui.teleport_commands.homes.choose_default_hint", player))
+                .setCallback(type -> {
+                    if (type != ClickType.MOUSE_LEFT) return;
+                    if (!ConfigManager.CONFIG.home.isEnabled()) { close(); return; }
+                    choosingDefault = !choosingDefault;
+                    build();
+                }).build());
         setSlot(49, new GuiElementBuilder(Items.BARRIER)
                 .setName(getTranslatedText("gui.teleport_commands.common.close", player).withStyle(ChatFormatting.RED))
                 .setCallback((type) -> this.close()).build());

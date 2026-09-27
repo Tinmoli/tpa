@@ -47,35 +47,6 @@ public class rtp {
     }
 
     private static void randomTeleport(ServerPlayer player, ServerLevel targetWorld) throws Exception {
-        int minRange = ConfigManager.CONFIG.rtp.minRange;
-        int maxRange = ConfigManager.CONFIG.rtp.maxRange;
-
-        // 最多尝试 10 次，提高在海洋/特殊地形时的成功率
-        Optional<BlockPos> safePos = Optional.empty();
-        for (int attempt = 0; attempt < 10 && safePos.isEmpty(); attempt++) {
-            ThreadLocalRandom rng = ThreadLocalRandom.current();
-            double angle = rng.nextDouble() * Math.PI * 2;
-            double radius = Math.sqrt((double) minRange * minRange
-                    + rng.nextDouble() * ((double) maxRange * maxRange - (double) minRange * minRange));
-            int randomX = (int) Math.round(Math.cos(angle) * radius);
-            int randomZ = (int) Math.round(Math.sin(angle) * radius);
-            safePos = getRandomSafeBlockPos(randomX, randomZ, targetWorld);
-        }
-
-        if (safePos.isEmpty()) {
-            sendPlayerMessage(player,
-                    getTranslatedText("commands.teleport_commands.rtp.noSafeLocation", player)
-                            .withStyle(ChatFormatting.RED), true);
-            return;
-        }
-
-        BlockPos teleportBlockPos = safePos.get();
-        Vec3 teleportPos = new Vec3(teleportBlockPos.getX() + 0.5, teleportBlockPos.getY(), teleportBlockPos.getZ() + 0.5);
-
-        sendPlayerMessage(player,
-                getTranslatedText("commands.teleport_commands.rtp.teleporting", player)
-                        .withStyle(ChatFormatting.AQUA), true);
-
-        Teleporter(player, targetWorld, teleportPos);
+        RtpManager.request(player, targetWorld);
     }
 }

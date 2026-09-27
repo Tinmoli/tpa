@@ -135,6 +135,24 @@ class SqliteStorageTest {
         assertEquals(99, scalar(db, "PRAGMA user_version"));
     }
 
+    @Test void switchingDefaultHomeSurvivesReloadWithoutChangingIconsOrLocations() throws Exception {
+        Path db = legacy(LEGACY); use(db);
+        Player player = StorageManager.STORAGE.getPlayer("player-一").orElseThrow();
+        var homesBefore = new Gson().toJsonTree(player.getHomes());
+        player.setDefaultHome("矿洞");
+        assertEquals("矿洞", player.getDefaultHome());
+        use(db);
+        Player reloaded = StorageManager.STORAGE.getPlayer("player-一").orElseThrow();
+        assertEquals("矿洞", reloaded.getDefaultHome());
+        assertEquals(homesBefore, new Gson().toJsonTree(reloaded.getHomes()));
+    }
+
+    @Test void differentPlayerIdsDoNotShareHomes() throws Exception {
+        Path db = legacy(LEGACY); use(db);
+        assertEquals(2, StorageManager.STORAGE.getPlayer("player-一").orElseThrow().getHomes().size());
+        assertTrue(StorageManager.STORAGE.getPlayer("player-two").orElseThrow().getHomes().isEmpty());
+    }
+
     @Test void failureBetweenHomeAndDefaultUpdateRollsBackBoth() throws Exception {
         Path db = legacy(LEGACY); use(db);
         try (Connection c = connection(db); Statement s = c.createStatement()) {

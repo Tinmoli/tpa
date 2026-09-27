@@ -40,6 +40,7 @@ public class tpa {
 
 	// Gets ran when the server starts, initializes the mod :3
 	public static void initializeMod(MinecraftServer server) {
+		RtpManager.reset(true);
 		Constants.LOGGER.info("Initializing tpa (V{})! Hello {}!", Constants.VERSION, MOD_LOADER);
 
 		// Static state survives integrated-server restarts in the same JVM.
@@ -66,6 +67,7 @@ public class tpa {
 	 * player references cannot run after the reload.
 	 */
 	public static synchronized void reloadRuntimeState() throws Exception {
+		RtpManager.reset(false);
 		if (CONFIG_DIR == null || LANG_DIR == null || SERVER == null) {
 			throw new IllegalStateException("TPA has not finished initializing.");
 		}

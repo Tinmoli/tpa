@@ -4,7 +4,7 @@
 
 A Minecraft server-side mod that adds various teleportation-related commands, including /home, /tpa, /back, /rtp, and more.
 
-Current version: **1.0.6**
+Current version: **1.0.7**
 
 Project URL: [https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 
@@ -106,8 +106,8 @@ rtp:
 In the `/homes` GUI:
 
 - Left-click a home to teleport
-- Middle-click a home to make it the default home
-- Right-click a home to delete it
+- Click the bottom compass, then left-click a Home to set the default without teleporting or changing its name/icon colors. Click the compass again to cancel. Middle-click remains available when the client supports it; use the compass in vanilla survival.
+- Right-click a home to review its name and coordinates, then left-click Confirm to delete. Cancel or close to keep it.
 - `Shift + Left-click` a home to open the vanilla item icon picker
 - `Shift + Right-click` a home to quickly restore the default bed icon
 
@@ -218,3 +218,27 @@ If you encounter any issues, please submit an [Issue](https://github.com/Tinmoli
 ## Development layout
 
 All versions share the root fabric/src/main/java, fabric/src/main/resources, and fabric/src/test/java directories. The versions/ directories contain build configuration only and require the full checkout. buildAllVersions compiles, tests, and packages all six versions. Builds require JDK 25; the 1.21.11 artifact still targets Java 21.
+
+
+## RTP performance and waiting (1.0.7)
+
+Accepted commands immediately display a search message. Destinations are cached separately per dimension and checked again before use. Used entries are removed. Dimensions occupied by online players keep up to two spare destinations, with a global limit of six and a five-minute lifetime. Only coordinates are cached; chunks are not force-loaded. Unloaded cached destinations still require asynchronous loading, so cold starts and empty caches can take time.
+
+The global RTP chunk load limit defaults to one and is configurable. Background attempts are spaced by at least 10 seconds and foreground attempts by at least 2 seconds. Requests try at most three chunks and sixteen columns per chunk. The queue holds eight requests; each player has a configurable request cooldown (30 seconds by default) and searches time out after 30 seconds. Tick gaps above 150ms pause new loads for 10 seconds. Timed-out generation is allowed to drain before any new task starts, without teleporting the expired requester. Disconnecting, dying, changing dimensions or reloading cancels requests.
+
+Use /rtp in the current dimension, or specify /rtp minecraft:the_nether or /rtp minecraft:the_end. Nether destinations stay below the roof; End searches can fail when no island exists in range. Generation and player view-distance loading still consume memory. These limits cannot fix insufficient system commit memory or unsuitable JVM heap settings.
+
+### RTP cooldown and concurrency settings
+
+Accepted requests immediately show a searching message. A safe destination is checked and used as soon as it is available, with no fixed countdown. Searches time out after 30 seconds.
+
+Configure these under rtp in config/tpa/config.yml (missing settings are added automatically; use /tpareload after editing):
+
+```yaml
+rtp:
+  cooldownEnabled: true
+  cooldownSeconds: 30
+  maxConcurrentLoads: 1
+```
+
+Disable cooldownEnabled or set cooldownSeconds to 0 to disable request cooldown. Cooldown starts when accepted and messages show remaining seconds. maxConcurrentLoads limits simultaneous RTP chunk loads server-wide (1–8, default 1). Higher concurrency increases memory pressure; pacing and queue limits still apply. Lowering the limit lets existing tasks drain. Reloading cancels pending requests.
