@@ -39,6 +39,8 @@ class RtpCompatibilityTest {
     @Test void lifecycleMixinTargetsExist() throws Exception {
         calls("/net/minecraft/server/MinecraftServer.class", "tickServer", "(Ljava/util/function/BooleanSupplier;)V");
         calls("/net/minecraft/server/MinecraftServer.class", "stopServer", "()V");
+        calls("/net/minecraft/server/level/ServerPlayer.class", "hurtServer",
+                "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z");
     }
 
     @Test void safetySearchCannotSynchronouslyGenerateChunks() throws Exception {

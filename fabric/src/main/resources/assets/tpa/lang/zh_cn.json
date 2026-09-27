@@ -1,9 +1,10 @@
 {
-  "commands.teleport_commands.rtp.cooldown_remaining": "随机传送冷却中，还需等待 %1% 秒。",
+  "commands.teleport_commands.rtp.cooldown_left": "随机传送冷却中，还需等待 %0% 秒。",
+  "commands.teleport_commands.rtp.busy_now": "随机传送搜索人数过多，请稍后再试。",
+  "commands.teleport_commands.rtp.failed_surface": "在搜索限制内未找到安全地面，请稍后重试。",
+  "commands.teleport_commands.rtp.success": "随机传送完成。",
   "commands.teleport_commands.rtp.searching": "正在寻找随机传送的安全位置…",
   "commands.teleport_commands.rtp.pending": "正在为你寻找位置，请勿重复提交。",
-  "commands.teleport_commands.rtp.cooldown": "随机传送冷却中，请在上次请求 30 秒后重试。",
-  "commands.teleport_commands.rtp.busy": "随机传送队列已满，请稍后重试。",
   "commands.teleport_commands.rtp.timeout": "寻找安全位置超时，请稍后重试。",
   "commands.teleport_commands.rtp.cancelled": "随机传送搜索已取消。",
   "gui.teleport_commands.homes.delete_title": "确认删除 Home",

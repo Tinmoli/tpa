@@ -16,7 +16,7 @@
 |------|----------|
 | Fabric | 1.21.11、26.1、26.1.1、26.1.2、26.2、26.3 |
 
-> **注意**：从 v1.0.3 起，项目已转为纯 Fabric 模组，不再支持 NeoForge 和 Quilt。
+> 仅支持 Fabric。
 
 ## 依赖
 
@@ -99,7 +99,52 @@ rtp:
   minRange: 1000
   # 随机传送最大范围（方块）
   maxRange: 2000
+  # 是否启用 RTP 请求冷却
+  cooldownEnabled: true
+  # RTP 成功后的冷却时间（秒），0 表示不冷却
+  cooldownSeconds: 30
+  # 全服同时进行的 RTP 请求数量上限（1-10），满额时拒绝新请求
+  maxConcurrentLoads: 10
+  # RTP 最终失败或取消后的冷却秒数，0 表示不冷却
+  failureCooldownSeconds: 30
+  # 每个请求最多尝试的随机位置数量（1-100）
+  maxAttempts: 10
+  # 寻找安全位置的总超时时间（秒，1-120）
+  timeoutSeconds: 15
+  # 单次区块加载的超时时间（秒，1-30）
+  loadTimeoutSeconds: 5
+  # 传送后的普通伤害保护时长（tick，0-1200），0 表示关闭
+  invulnerabilityTicks: 60
+  # 禁用群系：支持完整 ID 和以 # 开头的标签（标签需加引号）
+  biomeBlacklist: ['#minecraft:is_ocean', '#minecraft:is_river']
+  # 危险方块：支持完整 ID 和标签；液体、树叶、基岩始终禁止
+  floorBlacklist: [minecraft:lava, minecraft:water, minecraft:magma_block, minecraft:powder_snow, '#minecraft:leaves', minecraft:cactus, minecraft:fire, minecraft:soul_fire, minecraft:sweet_berry_bush, minecraft:cobweb, minecraft:campfire, minecraft:soul_campfire]
+  # 按维度 ID 设置搜索模式、中心、范围和黑名单
+  dimensions: {}
 ```
+
+### 随机传送
+
+执行 `/rtp` 在当前维度寻找安全位置；也可使用 `/rtp minecraft:the_nether`、`/rtp minecraft:the_end` 或指定已加载的自定义维度 ID。搜索期间底部持续显示提示，找到安全位置后直接传送；没有固定倒计时，超时或尝试次数用尽会提示失败。
+
+默认以目标维度出生点为中心，在 minRange 到 maxRange 之间随机搜索。开放维度只传地表，有顶维度寻找内部安全地面；排除液体、树叶和危险方块。雪层按实际碰撞判断能否站立。地形中没有安全落点时会失败。
+
+冷却从成功或最终失败后开始。cooldownEnabled=false 关闭两类冷却；cooldownSeconds=0 只关闭成功冷却，failureCooldownSeconds=0 只关闭失败冷却。再次使用时会提示剩余秒数。并发满额的请求直接拒绝，不计冷却。传送后的保护不拦截绕过无敌的伤害，如虚空和 `/kill`。
+
+如需为某个维度单独设置规则，在 rtp.dimensions 下填写完整维度 ID。mode 支持 auto（自动判断）、surface（地表）和 interior（内部地面）；未填写的范围及黑名单继承全局设置，中心默认使用该维度出生点。例如：
+
+```yaml
+  dimensions:
+    'custom:moon':
+      mode: surface
+      centerX: 0
+      centerZ: 0
+      minRange: 100
+      maxRange: 800
+      biomeBlacklist: []
+```
+
+修改配置后执行 `/tpareload`。进行中的搜索会取消；配置补全时会写入内置注释。提高并发会增加服务器负载，新区块生成耗时取决于服务器性能和地形。
 
 ### Home GUI 自定义图标
 
@@ -136,13 +181,12 @@ rtp:
 
 ## SQLite 存储与旧数据导入
 
-从 1.0.6 起，玩家、Home 和 Warp 分表保存，日常操作只更新相关记录。旧版 SQLite 在首次启动时自动迁移，无需执行命令；迁移前自动生成 storage.db.pre-v2-*.bak，事务内写入并回读核对所有字段，失败时回滚并保留旧库。名称、坐标、维度、自定义图标、默认 Home 和列表顺序均保留。
+玩家、Home 和 Warp 存储在 SQLite 中。升级旧数据库时，首次启动会自动迁移，无需执行命令；迁移前生成 storage.db.pre-v2-*.bak 备份，失败时回滚并保留旧库。
 
 若不存在 storage.db 而存在 storage.json，首次启动会自动导入，源 JSON 保留；若已有数据库，则优先使用数据库，手动导入命令用于明确覆盖。回退旧版模组时，应停服并恢复迁移前备份，旧模组不能读取新表结构。
 
 
-模组现在固定使用 `config/tpa/storage.db` 作为运行时存储，不再提供
-JSON 运行时后端，也不再需要 `storage.backend` 配置。
+运行时数据库位于 `config/tpa/storage.db`。
 
 如果需要用旧 JSON 替换现有数据库中的数据，请将 `storage.json` 放在
 `config/tpa/` 中，由 OP 手动执行以下命令。普通 SQLite 升级无需执行：
@@ -211,27 +255,3 @@ gradlew.bat buildAllVersions
 ## 开发结构
 
 所有版本共享根目录 fabric/src/main/java、fabric/src/main/resources 和 fabric/src/test/java。versions/ 仅保留各 Minecraft 版本的构建配置，不能单独复制版本目录进行构建。修改业务代码只需修改根目录，buildAllVersions 会对六个版本编译、测试并打包。构建使用 JDK 25；1.21.11 产物仍以 Java 21 为目标。
-
-
-## RTP 性能与等待（1.0.7）
-
-输入命令后立即提示正在寻找安全位置。优先使用当前维度的预备落点，使用前重新检查地形安全；用过的落点从缓存移除。每个有在线玩家的维度最多预备 2 个，全服最多 6 个，坐标缓存 5 分钟，不强制常驻区块。已卸载的落点仍需要异步加载，因此首次使用或缓存耗尽时需要等待。
-
-全服 RTP 区块加载默认并发为 1，可通过配置调整；后台尝试间隔至少 10 秒，有请求时至少 2 秒。每个请求最多尝试 3 个区块，每个区块检查最多 16 个位置。队列最多 8 人，每人请求冷却默认 30 秒，可修改或关闭、搜索超时 30 秒。检测到 tick 间隔超过 150ms 后暂停新加载 10 秒；超时不会再传送，已有的游戏区块生成需自行完成，期间不会再叠加新任务。下线、死亡、切换维度或重载会取消请求。
-
-使用 /rtp 在当前维度搜索，也可使用 /rtp minecraft:the_nether 或 /rtp minecraft:the_end 指定维度。下界搜索基岩顶层以下的落点，末地仍可能因范围内没有岛屿而失败。区块生成和传送后的玩家视距加载仍消耗内存，以上限制不能解决 JVM 堆配置或系统提交内存不足。
-
-### RTP 冷却和并发设置
-
-请求接受后立即提示正在寻找安全位置，落点准备好并通过安全检查后直接传送，不再固定等待 3 秒。搜索仍在 30 秒后超时。
-
-在 config/tpa/config.yml 的 rtp 下配置（旧配置自动补齐，修改后 /tpareload）：
-
-```yaml
-rtp:
-  cooldownEnabled: true
-  cooldownSeconds: 30
-  maxConcurrentLoads: 1
-```
-
-cooldownEnabled 设为 false 或 cooldownSeconds 设为 0 可关闭请求冷却；冷却从接受请求时开始，提示显示剩余秒数。maxConcurrentLoads 控制全服同时进行的 RTP 区块加载，支持 1–8，默认 1。提高并发会增加内存压力，加载间隔及队列限制仍保留。降低上限后等待原任务结束；重载会取消当前请求。

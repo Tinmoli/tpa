@@ -9,7 +9,8 @@
     "PlayerDeathMixin",
     "CommandsMixin",
     "RtpChunkAccess",
-    "RtpTickMixin"
+    "RtpTickMixin",
+    "RtpProtectionMixin"
   ],
   "client": [],
   "server": [],

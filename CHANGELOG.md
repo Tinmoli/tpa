@@ -6,12 +6,19 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.7] - 2026-09-27
 
-- RTP immediately acknowledges searches and teleports when safe, without a fixed countdown; add configurable request cooldown and global chunk-load concurrency limit (default 1).
+- Keep configuration comments focused on purpose, units and allowed values; refresh known generated RTP comments without changing values or other custom notes.
+- Place RTP usage and the complete configuration example in the README configuration section; keep change and migration history in the changelog.
+
+- Remove RTP destination caching and fixed search intervals; sample a uniform annulus around the target dimension spawn and teleport as soon as safe.
 
 
 - Replace synchronous RTP chunk generation with nonblocking requests polled on server ticks.
-- Cache a small per-dimension pool with safety revalidation, bounded concurrency, queues, retries and refill rates; pause new loads during lag.
-- Immediately acknowledge commands and add localized pending, cooldown, busy, timeout and cancellation messages.
+- Two workers process coordinates and immutable safety snapshots; chunk operations, reads, final checks and teleports stay on the main thread. Default request concurrency is ten; excess requests are rejected.
+- Default to a 15-second request timeout, five-second chunk timeout and ten attempts; unresolved timed-out loads keep their slots until drained.
+- Refresh search feedback every second and replace it on completion; fix missing cooldown seconds caused by an incorrect placeholder index.
+- Apply configurable success/failure cooldowns after outcomes (defaults 30/30 seconds). Preserve existing cooldown and concurrency values and add missing settings with comments.
+- Support all dimensions, automatic surface/interior search modes and per-dimension center, range, mode and blacklist overrides.
+- Reject fluids, waterlogged blocks, leaves and bedrock floors, exclude ocean/river biomes and provide 60 ticks of ordinary damage protection after success.
 - Clear state on reload/shutdown and cancel requests on disconnect, death or dimension change; drain old generation before starting another.
 - Verify nonblocking chunk entry points and lifecycle mixin targets across six game versions.
 

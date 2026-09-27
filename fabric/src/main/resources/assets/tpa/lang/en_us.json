@@ -1,9 +1,10 @@
 {
-  "commands.teleport_commands.rtp.cooldown_remaining": "Random teleport cooldown: %1% seconds remaining.",
+  "commands.teleport_commands.rtp.cooldown_left": "Random teleport cooldown: %0% seconds remaining.",
+  "commands.teleport_commands.rtp.busy_now": "Too many random teleport searches. Please try again shortly.",
+  "commands.teleport_commands.rtp.failed_surface": "No safe ground was found within the search limits.",
+  "commands.teleport_commands.rtp.success": "Random teleport complete.",
   "commands.teleport_commands.rtp.searching": "Searching for a safe random destination…",
   "commands.teleport_commands.rtp.pending": "Your search is already in progress.",
-  "commands.teleport_commands.rtp.cooldown": "Please wait 30 seconds between random teleport requests.",
-  "commands.teleport_commands.rtp.busy": "Random teleport queue is full. Please try again later.",
   "commands.teleport_commands.rtp.timeout": "Destination search timed out. Please try again later.",
   "commands.teleport_commands.rtp.cancelled": "Random teleport search cancelled.",
   "gui.teleport_commands.homes.delete_title": "Confirm Home deletion",

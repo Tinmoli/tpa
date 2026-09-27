@@ -16,7 +16,7 @@ Project URL: [https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 |----------|-------------------|
 | Fabric | 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2, 26.3 |
 
-> **Note**: Starting from v1.0.3, the project has transitioned to a Fabric-only mod. NeoForge and Quilt support has been removed.
+> Fabric only.
 
 ## Dependencies
 
@@ -99,7 +99,52 @@ rtp:
   minRange: 1000
   # Maximum random teleport range (blocks)
   maxRange: 2000
+  # Enable success and failure cooldowns
+  cooldownEnabled: true
+  # Cooldown after success, in seconds; 0 disables it
+  cooldownSeconds: 30
+  # Concurrent requests across the server (1-10); reject requests when full
+  maxConcurrentLoads: 10
+  # Cooldown after final failure or cancellation, in seconds; 0 disables it
+  failureCooldownSeconds: 30
+  # Maximum random positions tried per request (1-100)
+  maxAttempts: 10
+  # Total search timeout, in seconds (1-120)
+  timeoutSeconds: 15
+  # Individual chunk loading timeout, in seconds (1-30)
+  loadTimeoutSeconds: 5
+  # Ordinary damage protection after teleport, in ticks (0-1200); 0 disables it
+  invulnerabilityTicks: 60
+  # Blocked biome IDs or quoted tags beginning with #
+  biomeBlacklist: ['#minecraft:is_ocean', '#minecraft:is_river']
+  # Dangerous block IDs or tags; fluids, leaves and bedrock are always rejected
+  floorBlacklist: [minecraft:lava, minecraft:water, minecraft:magma_block, minecraft:powder_snow, '#minecraft:leaves', minecraft:cactus, minecraft:fire, minecraft:soul_fire, minecraft:sweet_berry_bush, minecraft:cobweb, minecraft:campfire, minecraft:soul_campfire]
+  # Per-dimension search mode, center, range and blacklist settings
+  dimensions: {}
 ```
+
+### Random Teleport
+
+Use `/rtp` in the current dimension, or specify `/rtp minecraft:the_nether`, `/rtp minecraft:the_end` or a loaded custom dimension ID. The action bar displays search progress until a safe destination is found or the search ends. There is no fixed countdown; timeouts or exhausted attempts report failure.
+
+Coordinates are selected around the target dimension's spawn between minRange and maxRange. Open dimensions use surface ground; ceiling dimensions search interior ground. Fluids, leaves and dangerous blocks are excluded. Snow depends on its collision shape. Searches fail when no safe destination exists.
+
+Cooldown starts after success or final failure. cooldownEnabled=false disables both cooldowns; cooldownSeconds=0 disables success cooldown and failureCooldownSeconds=0 disables failure cooldown. Reusing the command shows remaining seconds. Capacity rejection does not apply cooldown. Post-teleport protection does not block damage that bypasses invulnerability, such as the void or `/kill`.
+
+Set per-dimension rules under rtp.dimensions using full dimension IDs. mode accepts auto, surface or interior. Omitted ranges and blacklists inherit global values; the center defaults to that dimension's spawn. Example:
+
+```yaml
+  dimensions:
+    'custom:moon':
+      mode: surface
+      centerX: 0
+      centerZ: 0
+      minRange: 100
+      maxRange: 800
+      biomeBlacklist: []
+```
+
+Run `/tpareload` after editing configuration; pending searches are cancelled. Missing settings are populated with built-in comments. Higher concurrency increases server load, and new chunk generation time depends on hardware and terrain.
 
 ### Custom Home Icons
 
@@ -139,13 +184,12 @@ settings cannot run afterward. Current `/back` death locations are preserved.
 
 ## SQLite Storage and Legacy Data Import
 
-Version 1.0.6 stores players, homes, and warps in separate tables; normal edits update only the affected records. Existing SQLite storage upgrades automatically on first startup, preserving names, coordinates, dimensions, icons, default homes, and ordering. A storage.db.pre-v2-*.bak backup is created before migration. Writes and read-back verification run in one transaction; failure rolls back and preserves the old database.
+Players, homes and warps are stored in SQLite. Older databases migrate automatically on first startup without a command. A storage.db.pre-v2-*.bak backup is created first; failure rolls back and preserves the old database.
 
 If storage.db does not exist, an existing storage.json is imported automatically and retained. Existing SQLite takes precedence; the explicit import command replaces its data. To downgrade, stop the server and restore the pre-migration backup; older mods cannot read the new schema.
 
 
-The mod now always uses `config/tpa/storage.db` as its runtime storage. The JSON
-runtime backend and the `storage.backend` setting have been removed.
+The runtime database is located at `config/tpa/storage.db`.
 
 To explicitly replace an existing database with legacy JSON data, place
 `storage.json` in `config/tpa/` and run this command as an operator.
@@ -218,27 +262,3 @@ If you encounter any issues, please submit an [Issue](https://github.com/Tinmoli
 ## Development layout
 
 All versions share the root fabric/src/main/java, fabric/src/main/resources, and fabric/src/test/java directories. The versions/ directories contain build configuration only and require the full checkout. buildAllVersions compiles, tests, and packages all six versions. Builds require JDK 25; the 1.21.11 artifact still targets Java 21.
-
-
-## RTP performance and waiting (1.0.7)
-
-Accepted commands immediately display a search message. Destinations are cached separately per dimension and checked again before use. Used entries are removed. Dimensions occupied by online players keep up to two spare destinations, with a global limit of six and a five-minute lifetime. Only coordinates are cached; chunks are not force-loaded. Unloaded cached destinations still require asynchronous loading, so cold starts and empty caches can take time.
-
-The global RTP chunk load limit defaults to one and is configurable. Background attempts are spaced by at least 10 seconds and foreground attempts by at least 2 seconds. Requests try at most three chunks and sixteen columns per chunk. The queue holds eight requests; each player has a configurable request cooldown (30 seconds by default) and searches time out after 30 seconds. Tick gaps above 150ms pause new loads for 10 seconds. Timed-out generation is allowed to drain before any new task starts, without teleporting the expired requester. Disconnecting, dying, changing dimensions or reloading cancels requests.
-
-Use /rtp in the current dimension, or specify /rtp minecraft:the_nether or /rtp minecraft:the_end. Nether destinations stay below the roof; End searches can fail when no island exists in range. Generation and player view-distance loading still consume memory. These limits cannot fix insufficient system commit memory or unsuitable JVM heap settings.
-
-### RTP cooldown and concurrency settings
-
-Accepted requests immediately show a searching message. A safe destination is checked and used as soon as it is available, with no fixed countdown. Searches time out after 30 seconds.
-
-Configure these under rtp in config/tpa/config.yml (missing settings are added automatically; use /tpareload after editing):
-
-```yaml
-rtp:
-  cooldownEnabled: true
-  cooldownSeconds: 30
-  maxConcurrentLoads: 1
-```
-
-Disable cooldownEnabled or set cooldownSeconds to 0 to disable request cooldown. Cooldown starts when accepted and messages show remaining seconds. maxConcurrentLoads limits simultaneous RTP chunk loads server-wide (1–8, default 1). Higher concurrency increases memory pressure; pacing and queue limits still apply. Lowering the limit lets existing tasks drain. Reloading cancels pending requests.

@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ConfigManager {
     public static Path CONFIG_FILE;
@@ -47,6 +49,7 @@ public class ConfigManager {
             ConfigSaver();
             Constants.LOGGER.info("Missing config keys have been automatically added.");
         } else {
+            refreshRtpComments();
             Constants.LOGGER.info("Config loaded successfully!");
         }
     }
@@ -92,6 +95,26 @@ public class ConfigManager {
         rtp.put("cooldownEnabled", cfg.rtp.cooldownEnabled);
         rtp.put("cooldownSeconds", cfg.rtp.cooldownSeconds);
         rtp.put("maxConcurrentLoads", cfg.rtp.maxConcurrentLoads);
+        rtp.put("failureCooldownSeconds", cfg.rtp.failureCooldownSeconds);
+        rtp.put("maxAttempts", cfg.rtp.maxAttempts);
+        rtp.put("timeoutSeconds", cfg.rtp.timeoutSeconds);
+        rtp.put("loadTimeoutSeconds", cfg.rtp.loadTimeoutSeconds);
+        rtp.put("invulnerabilityTicks", cfg.rtp.invulnerabilityTicks);
+        rtp.put("biomeBlacklist", cfg.rtp.biomeBlacklist);
+        rtp.put("floorBlacklist", cfg.rtp.floorBlacklist);
+        Map<String, Object> dimensions = new LinkedHashMap<>();
+        cfg.rtp.dimensions.forEach((id, d) -> {
+            Map<String, Object> values = new LinkedHashMap<>();
+            values.put("mode", d.mode);
+            if (d.centerX != null) values.put("centerX", d.centerX);
+            if (d.centerZ != null) values.put("centerZ", d.centerZ);
+            if (d.minRange != null) values.put("minRange", d.minRange);
+            if (d.maxRange != null) values.put("maxRange", d.maxRange);
+            if (d.biomeBlacklist != null) values.put("biomeBlacklist", d.biomeBlacklist);
+            if (d.floorBlacklist != null) values.put("floorBlacklist", d.floorBlacklist);
+            dimensions.put(id, values);
+        });
+        rtp.put("dimensions", dimensions);
         root.put("rtp", rtp);
         Files.createDirectories(CONFIG_FILE.getParent());
         StringWriter sw = new StringWriter();
@@ -126,8 +149,16 @@ public class ConfigManager {
             {"  minRange:",            "  # 随机传送最小范围（方块）"},
             {"  maxRange:",            "  # 随机传送最大范围（方块）"},
             {"  cooldownEnabled:",     "  # 是否启用 RTP 请求冷却"},
-            {"  cooldownSeconds:",     "  # RTP 请求冷却秒数，0 表示不冷却"},
-            {"  maxConcurrentLoads:",  "  # 全服 RTP 区块加载并发上限（1-8），默认 1；提高会增加内存压力"},
+            {"  cooldownSeconds:",     "  # RTP 成功后的冷却时间（秒），0 表示不冷却"},
+            {"  maxConcurrentLoads:",  "  # 全服同时进行的 RTP 请求数量上限（1-10），满额时拒绝新请求"},
+            {"  failureCooldownSeconds:", "  # RTP 最终失败或取消后的冷却秒数，0 表示不冷却"},
+            {"  maxAttempts:", "  # 每个请求最多尝试的随机位置数量（1-100）"},
+            {"  timeoutSeconds:", "  # 寻找安全位置的总超时时间（秒，1-120）"},
+            {"  loadTimeoutSeconds:", "  # 单次区块加载的超时时间（秒，1-30）"},
+            {"  invulnerabilityTicks:", "  # 传送后的普通伤害保护时长（tick，0-1200），0 表示关闭"},
+            {"  biomeBlacklist:", "  # 禁用群系：支持完整 ID 和以 # 开头的标签（标签需加引号）"},
+            {"  floorBlacklist:", "  # 危险方块：支持完整 ID 和标签；液体、树叶、基岩始终禁止"},
+            {"  dimensions:", "  # 按维度 ID 覆盖 mode(auto/surface/interior)、centerX/Z、minRange/maxRange 及黑名单"},
         };
         StringBuilder sb = new StringBuilder();
         for (String line : yaml.split("\n", -1)) {
@@ -162,8 +193,29 @@ public class ConfigManager {
                     || !hasKeys(data, "spawn",
                             "enabled", "world_id")
                     || !hasKeys(data, "rtp",
-                            "enabled", "minRange", "maxRange", "cooldownEnabled", "cooldownSeconds", "maxConcurrentLoads");
+                            "enabled", "minRange", "maxRange", "cooldownEnabled", "cooldownSeconds", "maxConcurrentLoads",
+                            "failureCooldownSeconds", "maxAttempts", "timeoutSeconds", "loadTimeoutSeconds",
+                            "invulnerabilityTicks", "biomeBlacklist", "floorBlacklist", "dimensions");
         }
+    }
+
+    /** Refresh only known generated comments; do not rewrite values or user comments. */
+    private static void refreshRtpComments() throws Exception {
+        String original = Files.readString(CONFIG_FILE, java.nio.charset.StandardCharsets.UTF_8);
+        String text = original;
+        String[][] changes = {
+            {"# RTP 成功后的冷却秒数，0 表示成功后不冷却；保留旧配置值", "# RTP 成功后的冷却时间（秒），0 表示不冷却"},
+            {"# RTP 请求冷却秒数，0 表示不冷却", "# RTP 成功后的冷却时间（秒），0 表示不冷却"},
+            {"# 全服 RTP 请求并发上限（1-8），默认 2；满额直接拒绝，提高会增加内存压力", "# 全服同时进行的 RTP 请求数量上限（1-10），满额时拒绝新请求"},
+            {"# 全服 RTP 区块加载并发上限（1-8），默认 1；提高会增加内存压力", "# 全服同时进行的 RTP 请求数量上限（1-10），满额时拒绝新请求"},
+            {"# 全服同时进行的 RTP 请求数量上限（1-8），满额时拒绝新请求", "# 全服同时进行的 RTP 请求数量上限（1-10），满额时拒绝新请求"},
+            {"# 每个请求最多尝试的随机列数（1-100），默认 10", "# 每个请求最多尝试的随机位置数量（1-100）"},
+            {"# 请求总超时秒数（1-120），默认 15；超时不会继续传送", "# 寻找安全位置的总超时时间（秒，1-120）"},
+            {"# 单次区块加载超时秒数（1-30），默认 5；旧任务收尾后才允许重试", "# 单次区块加载的超时时间（秒，1-30）"},
+            {"# 传送后普通伤害保护 tick 数（0-1200），默认 60；不拦截绕过无敌的伤害", "# 传送后的普通伤害保护时长（tick，0-1200），0 表示关闭"}
+        };
+        for (String[] change : changes) text = text.replace(change[0], change[1]);
+        if (!text.equals(original)) Files.writeString(CONFIG_FILE, text, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private static boolean hasKeys(
@@ -220,7 +272,26 @@ public class ConfigManager {
             if (r.containsKey("maxRange")) cfg.rtp.maxRange = (int)     r.get("maxRange");
             if (r.containsKey("cooldownEnabled")) cfg.rtp.cooldownEnabled = (boolean) r.get("cooldownEnabled");
             if (r.containsKey("cooldownSeconds")) cfg.rtp.cooldownSeconds = Math.max(0, ((Number) r.get("cooldownSeconds")).intValue());
-            if (r.containsKey("maxConcurrentLoads")) cfg.rtp.maxConcurrentLoads = Math.max(1, Math.min(8, ((Number) r.get("maxConcurrentLoads")).intValue()));
+            cfg.rtp.maxConcurrentLoads = number(r, "maxConcurrentLoads", 10, 1, 10);
+            cfg.rtp.failureCooldownSeconds = number(r, "failureCooldownSeconds", 30, 0, 86400);
+            cfg.rtp.maxAttempts = number(r, "maxAttempts", 10, 1, 100);
+            cfg.rtp.timeoutSeconds = number(r, "timeoutSeconds", 15, 1, 120);
+            cfg.rtp.loadTimeoutSeconds = number(r, "loadTimeoutSeconds", 5, 1, 30);
+            cfg.rtp.invulnerabilityTicks = number(r, "invulnerabilityTicks", 60, 0, 1200);
+            cfg.rtp.biomeBlacklist = strings(r.get("biomeBlacklist"), cfg.rtp.biomeBlacklist);
+            cfg.rtp.floorBlacklist = strings(r.get("floorBlacklist"), cfg.rtp.floorBlacklist);
+            if (r.get("dimensions") instanceof Map<?, ?> dims) dims.forEach((id, raw) -> {
+                if (!(raw instanceof Map<?, ?> values)) return;
+                ConfigClass.Rtp.Dimension d = new ConfigClass.Rtp.Dimension();
+                if (values.get("mode") instanceof String mode && List.of("auto", "surface", "interior").contains(mode)) d.mode = mode;
+                if (values.containsKey("centerX")) d.centerX = number(values, "centerX", 0, -29999984, 29999984);
+                if (values.containsKey("centerZ")) d.centerZ = number(values, "centerZ", 0, -29999984, 29999984);
+                if (values.containsKey("minRange")) d.minRange = number(values, "minRange", 0, 0, 29999984);
+                if (values.containsKey("maxRange")) d.maxRange = number(values, "maxRange", 2000, 0, 29999984);
+                if (values.containsKey("biomeBlacklist")) d.biomeBlacklist = strings(values.get("biomeBlacklist"), cfg.rtp.biomeBlacklist);
+                if (values.containsKey("floorBlacklist")) d.floorBlacklist = strings(values.get("floorBlacklist"), cfg.rtp.floorBlacklist);
+                cfg.rtp.dimensions.put(String.valueOf(id), d);
+            });
         }
         if (cfg.language == null || cfg.language.isBlank()) {
             Constants.LOGGER.warn("language cannot be empty; using zh_cn.");
@@ -279,6 +350,17 @@ public class ConfigManager {
         return cfg;
     }
 
+    private static int number(Map<?, ?> map, String key, int fallback, int min, int max) {
+        Object value = map.get(key);
+        return value instanceof Number n ? (int) Math.max(min, Math.min(max, n.longValue())) : fallback;
+    }
+    private static List<String> strings(Object raw, List<String> fallback) {
+        if (!(raw instanceof List<?> list)) return new ArrayList<>(fallback);
+        List<String> result = new ArrayList<>();
+        for (Object item : list) if (item instanceof String text && !text.isBlank()) result.add(text);
+        return result;
+    }
+
     public static class ConfigClass {
         public String language = "zh_cn";
         public Back  back  = new Back();
@@ -332,7 +414,22 @@ public class ConfigManager {
             public int maxRange = 2000;
             public boolean cooldownEnabled = true;
             public int cooldownSeconds = 30;
-            public int maxConcurrentLoads = 1;
+            public int maxConcurrentLoads = 10;
+            public int failureCooldownSeconds = 30;
+            public int maxAttempts = 10;
+            public int timeoutSeconds = 15;
+            public int loadTimeoutSeconds = 5;
+            public int invulnerabilityTicks = 60;
+            public List<String> biomeBlacklist = new ArrayList<>(List.of("#minecraft:is_ocean", "#minecraft:is_river"));
+            public List<String> floorBlacklist = new ArrayList<>(List.of("minecraft:lava", "minecraft:water", "minecraft:magma_block",
+                    "minecraft:powder_snow", "#minecraft:leaves", "minecraft:cactus", "minecraft:fire", "minecraft:soul_fire",
+                    "minecraft:sweet_berry_bush", "minecraft:cobweb", "minecraft:campfire", "minecraft:soul_campfire"));
+            public Map<String, Dimension> dimensions = new LinkedHashMap<>();
+            public static class Dimension {
+                public String mode = "auto";
+                public Integer centerX, centerZ, minRange, maxRange;
+                public List<String> biomeBlacklist, floorBlacklist;
+            }
             public boolean isEnabled()   { return enabled; }
             public int     getMinRange() { return minRange; }
             public int     getMaxRange() { return maxRange; }
