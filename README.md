@@ -239,12 +239,12 @@ PowerShell is required:
 
 ```bat
 :: Windows
-.\gradlew.bat clean build check
+.\gradlew.bat clean build
 ```
 
 ```sh
 # Linux / macOS
-./gradlew clean build check
+./gradlew clean build
 ```
 
 Run from this version repository root using JDK 25. This builds Minecraft 26.3 only; the release JAR is in `fabric/build/libs/`.
@@ -260,7 +260,7 @@ If you encounter any issues, please submit an [Issue](https://github.com/Tinmoli
 
 ## Development layout
 
-This repository is self-contained for Minecraft 26.3: sources and resources are in `fabric/src/main/`, with local build configuration and Gradle Wrapper. Copy this entire folder to build independently; no sibling or parent project is needed. Builds require JDK 25; the 1.21.11 artifact targets Java 21. See [DEVELOPMENT.md](DEVELOPMENT.md) for Git and verification instructions.
+This repository is self-contained for Minecraft 26.3: sources and resources are in `fabric/src/main/`, with local build configuration and Gradle Wrapper. Copy this entire folder to build independently; no sibling or parent project is needed. Builds require JDK 25; the 1.21.11 artifact targets Java 21.
 
 Java sources live under `tpa`, with separate `command`, `config`, `storage`, `teleport`, `rtp`, `language`, `gui`, `suggestion`, `mixin` and `util` packages. Class names use PascalCase; methods and variables use camelCase. Use four-space indentation and a blank line between logical sections.
 
