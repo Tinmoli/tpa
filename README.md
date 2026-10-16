@@ -1,6 +1,6 @@
 # tpa <img alt="tpa Logo" src="fabric/src/main/resources/assets/tpa/icon.png" width="30"/>
 
-> **[中文文档](https://github.com/Tinmoli/tpa/blob/main/README_CN.md)** | Click here for Chinese documentation
+> **[中文文档](https://github.com/Tinmoli/tpa/blob/1.21.11/README_CN.md)** | Click here for Chinese documentation
 
 A Minecraft server-side mod that adds various teleportation-related commands, including /home, /tpa, /back, /rtp, and more.
 
@@ -8,7 +8,7 @@ Current version: **1.0.7**
 
 Project URL: [https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 
-[Changelog](https://github.com/Tinmoli/tpa/blob/main/CHANGELOG.md)
+[Changelog](https://github.com/Tinmoli/tpa/blob/1.21.11/CHANGELOG.md)
 
 ## Supported Platforms
 
@@ -239,16 +239,15 @@ PowerShell is required:
 
 ```bat
 :: Windows
-gradlew.bat buildAllVersions
+.\gradlew.bat clean build check
 ```
 
 ```sh
 # Linux / macOS
-./gradlew buildAllVersions
+./gradlew clean build check
 ```
 
-This cross-platform Gradle task builds all six version projects and
-collects the resulting JARs in the root `dist/` directory.
+Run from this version repository root using JDK 25. This builds Minecraft 1.21.11 only; the release JAR is in `fabric/build/libs/`.
 
 If you encounter any issues, please submit an [Issue](https://github.com/Tinmoli/tpa/issues)
 
@@ -261,4 +260,8 @@ If you encounter any issues, please submit an [Issue](https://github.com/Tinmoli
 
 ## Development layout
 
-All versions share `fabric/src/main/java` and `fabric/src/main/resources`. The `versions/` directories contain build configuration and require the full checkout. `buildAllVersions` compiles and packages all six versions. Builds require JDK 25; the 1.21.11 artifact targets Java 21.
+This repository is self-contained for Minecraft 1.21.11: sources and resources are in `fabric/src/main/`, with local build configuration and Gradle Wrapper. Copy this entire folder to build independently; no sibling or parent project is needed. Builds require JDK 25; the 1.21.11 artifact targets Java 21. See [DEVELOPMENT.md](DEVELOPMENT.md) for Git and verification instructions.
+
+Java sources live under `tpa`, with separate `command`, `config`, `storage`, `teleport`, `rtp`, `language`, `gui`, `suggestion`, `mixin` and `util` packages. Class names use PascalCase; methods and variables use camelCase. Use four-space indentation and a blank line between logical sections.
+
+Bundled resources live under `assets/tpa/`, including the icon, languages and mixin configuration. Fabric requires `fabric.mod.json` at the resource root. Runtime settings and player data remain under `config/tpa/`.

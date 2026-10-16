@@ -1,5 +1,5 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    id 'fabric-loom' version "${loom_version}"
 }
 
 base {
@@ -7,7 +7,9 @@ base {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+    // Minecraft 1.21.11 targets Java 21 bytecode, but using the installed
+    // JDK 25 compiler avoids downloading a second JDK in restricted networks.
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
     sourceCompatibility = JavaVersion.toVersion(java_version)
     targetCompatibility = JavaVersion.toVersion(java_version)
 }
@@ -32,16 +34,17 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     compileOnly 'org.spongepowered:mixin:0.8.5'
     compileOnly 'io.github.llamalad7:mixinextras-common:0.3.5'
     annotationProcessor 'io.github.llamalad7:mixinextras-common:0.3.5'
-    // YAML config support - bundled into the JAR via Loom's include
-    include(implementation('org.yaml:snakeyaml:2.2'))
-    // sgui - server-side GUI
-    include(implementation("eu.pb4:sgui:${sgui_version}"))
-    // SQLite runtime backend
-    include(implementation("org.xerial:sqlite-jdbc:3.46.1.0"))
+    // Bundle regular libraries.
+    implementation include('org.yaml:snakeyaml:2.2')
+    implementation include('org.xerial:sqlite-jdbc:3.46.1.0')
+    // SGUI is a Fabric mod in intermediary namespace. Declare and include it
+    // in one operation so Loom remaps it exactly once.
+    modImplementation include("eu.pb4:sgui:${sgui_version}")
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -50,7 +53,10 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/assets/tpa/tpa.accesswidener")
+    mixin {
+        useLegacyMixinAp = true
+        defaultRefmapName.set("assets/tpa/tpa.refmap.json")
+    }
 }
 
 processResources {
@@ -81,13 +87,14 @@ processResources {
     inputs.properties(expandProps)
 }
 
-jar {
+tasks.named("remapJar") {
     archiveFileName.set("${mod_id}-${project.name}-${minecraft_version}-v${version}.jar")
+}
+
+jar {
     exclude "**/*.md"
 
     from(rootProject.file("LICENSE")) {
         rename { "${it}-${mod_id}" }
     }
 }
-
-apply from: rootProject.file('gradle/shared-sources.gradle')

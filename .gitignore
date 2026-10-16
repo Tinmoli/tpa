@@ -15,10 +15,6 @@ build/
 # Compiled/output directories
 **/bin/
 out/
-dist/
-
-# Local reference source used only for regression comparison
-/Tpa/
 
 # Local build archives and logs
 gradle-*-bin.zip
@@ -36,3 +32,16 @@ logs/
 .DS_Store
 Thumbs.db
 desktop.ini
+# Local data and backups
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.bak
+backups/
+world/
+world_nether/
+world_the_end/
+
+dist/
