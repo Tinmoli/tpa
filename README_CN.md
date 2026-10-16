@@ -1,6 +1,6 @@
 # tpa <img alt="tpa Logo" src="fabric/src/main/resources/assets/tpa/icon.png" width="30"/>
 
-> **[English Documentation](https://github.com/Tinmoli/tpa/blob/main/README.md)** | 点击这里查看英文文档
+> **[English Documentation](https://github.com/Tinmoli/tpa/blob/26.1.2/README.md)** | 点击这里查看英文文档
 
 一个 Minecraft 服务端模组，添加了各种与传送相关的指令，包括 /home、/tpa、/back、/rtp 等
 
@@ -8,7 +8,7 @@
 
 项目地址：[https://github.com/Tinmoli/tpa](https://github.com/Tinmoli/tpa)
 
-这里是[更新日志](https://github.com/Tinmoli/tpa/blob/main/CHANGELOG_CN.md)
+这里是[更新日志](https://github.com/Tinmoli/tpa/blob/26.1.2/CHANGELOG_CN.md)
 
 ## 支持的平台
 
@@ -232,16 +232,15 @@ JSON 文件。为防止误覆盖，当 JSON 文件不存在或为空时，导入
 
 ```bat
 :: Windows
-gradlew.bat buildAllVersions
+.\gradlew.bat clean build check
 ```
 
 ```sh
 # Linux / macOS
-./gradlew buildAllVersions
+./gradlew clean build check
 ```
 
-该跨平台 Gradle 任务会构建全部六个版本，产物统一汇总到项目根目录的
-`dist/`。
+在当前版本仓库根目录使用 JDK 25 执行，仅构建 Minecraft 26.1.2，发行 JAR 位于 `fabric/build/libs/`。
 
 如有问题欢迎提交 [Issue](https://github.com/Tinmoli/tpa/issues)
 
@@ -254,4 +253,8 @@ gradlew.bat buildAllVersions
 
 ## 开发结构
 
-所有版本共享 `fabric/src/main/java` 和 `fabric/src/main/resources`。`versions/` 保留各 Minecraft 版本的构建配置，构建时需要完整项目。修改业务代码只需修改根目录，`buildAllVersions` 会编译并打包六个版本。构建使用 JDK 25；1.21.11 产物以 Java 21 为目标。
+当前仓库独立对应 Minecraft 26.1.2，完整源码和资源位于 `fabric/src/main/`，包含本地构建配置及 Gradle Wrapper。复制整个目录即可独立构建，不依赖父目录或其他版本。构建使用 JDK 25；1.21.11 产物以 Java 21 为目标。Git 操作与验证说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
+
+Java 源码统一位于 `tpa` 包下，按职责分为 `command`（命令）、`config`（配置）、`storage`（存储）、`teleport`（传送）、`rtp`（随机传送）、`language`（语言）、`gui`（界面）、`suggestion`（命令补全）、`mixin`（游戏接口接入）和 `util`（通用辅助）。类名使用大驼峰，方法及变量使用小驼峰，缩进为四个空格，逻辑段之间空一行。
+
+内置图标、语言和 Mixin 配置等资源放在 `assets/tpa/`。Fabric 要求的 `fabric.mod.json` 保留在资源根目录。运行时的配置与玩家数据仍位于 `config/tpa/`。
