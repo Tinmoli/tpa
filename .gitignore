@@ -1,47 +1,46 @@
-# Gradle
+# Build and caches
 .gradle/
 .gradle-local/
 build/
-**/build/
+bin/
+out/
+dist/
+gradle-*-bin.zip
 
-# IDE
+# Editors and OS
 .idea/
 .vscode/
 *.iml
 .classpath
 .project
 .settings/
-
-# Compiled/output directories
-**/bin/
-out/
-
-# Local build archives and logs
-gradle-*-bin.zip
-*-stdout.log
-*-stderr.log
-*-exit-code.txt
-
-# Runtime/server files
-run/
-logs/
-/config/
-*.log
-
-# OS files
 .DS_Store
 Thumbs.db
 desktop.ini
-# Local data and backups
-*.db
-*.db-shm
-*.db-wal
-*.sqlite
-*.sqlite3
+
+# Local runtime data, logs and backups
+run/
+logs/
+/config/
+/world*/
+*.log
+*.db*
+*.sqlite*
 *.bak
 backups/
-world/
-world_nether/
-world_the_end/
 
-dist/
+# Temporary tests, reports and development documents
+[tT]est/
+[tT]ests/
+test-results/
+test-reports/
+reports/
+coverage/
+*Test.java
+*Tests.java
+test_*
+*_test.*
+[tT][eE][sS][tT]*.md
+[tT][eE][sS][tT]*.txt
+[tT][eE][sS][tT]*.html
+[dD][eE][vV][eE][lL][oO][pP][mM][eE][nN][tT]*
