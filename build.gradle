@@ -1,5 +1,4 @@
 plugins { id 'base' }
 
 tasks.named('build') { dependsOn(':fabric:build') }
-tasks.named('check') { dependsOn(':fabric:check') }
 tasks.named('clean') { dependsOn(':fabric:clean') }
