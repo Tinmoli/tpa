@@ -232,12 +232,12 @@ JSON 文件。为防止误覆盖，当 JSON 文件不存在或为空时，导入
 
 ```bat
 :: Windows
-.\gradlew.bat clean build check
+.\gradlew.bat clean build
 ```
 
 ```sh
 # Linux / macOS
-./gradlew clean build check
+./gradlew clean build
 ```
 
 在当前版本仓库根目录使用 JDK 25 执行，仅构建 Minecraft 26.1.2，发行 JAR 位于 `fabric/build/libs/`。
@@ -253,7 +253,7 @@ JSON 文件。为防止误覆盖，当 JSON 文件不存在或为空时，导入
 
 ## 开发结构
 
-当前仓库独立对应 Minecraft 26.1.2，完整源码和资源位于 `fabric/src/main/`，包含本地构建配置及 Gradle Wrapper。复制整个目录即可独立构建，不依赖父目录或其他版本。构建使用 JDK 25；1.21.11 产物以 Java 21 为目标。Git 操作与验证说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
+当前仓库独立对应 Minecraft 26.1.2，完整源码和资源位于 `fabric/src/main/`，包含本地构建配置及 Gradle Wrapper。复制整个目录即可独立构建，不依赖父目录或其他版本。构建使用 JDK 25；1.21.11 产物以 Java 21 为目标。
 
 Java 源码统一位于 `tpa` 包下，按职责分为 `command`（命令）、`config`（配置）、`storage`（存储）、`teleport`（传送）、`rtp`（随机传送）、`language`（语言）、`gui`（界面）、`suggestion`（命令补全）、`mixin`（游戏接口接入）和 `util`（通用辅助）。类名使用大驼峰，方法及变量使用小驼峰，缩进为四个空格，逻辑段之间空一行。
 
