@@ -246,9 +246,9 @@ JSON 文件。为防止误覆盖，当 JSON 文件不存在或为空时，导入
 
 <br>
 
-## 鸣谢
+## 致谢与来源
 
-- [TeleportCommands](https://github.com/MrSn0wy/TeleportCommands) — 本项目的灵感来源与参考实现
+- 本项目是 [Mr. Snowy（MrSn0wy）](https://github.com/MrSn0wy) 创作的 [Teleport Commands](https://github.com/MrSn0wy/TeleportCommands) 的衍生项目，由 Tinmoli 维护和扩展。
 - [Dalict](https://github.com/Dalict) — 感谢贡献与支持
 
 ## 开发结构
