@@ -253,9 +253,9 @@ If you encounter any issues, please submit an [Issue](https://github.com/Tinmoli
 
 <br>
 
-## Credits
+## Credits and origin
 
-- [TeleportCommands](https://github.com/MrSn0wy/TeleportCommands) — Inspiration and reference implementation
+- This project is a derivative of [Teleport Commands](https://github.com/MrSn0wy/TeleportCommands), originally created by [Mr. Snowy (MrSn0wy)](https://github.com/MrSn0wy), and is maintained and extended by Tinmoli.
 - [Dalict](https://github.com/Dalict) — Contributions and support
 
 ## Development layout
